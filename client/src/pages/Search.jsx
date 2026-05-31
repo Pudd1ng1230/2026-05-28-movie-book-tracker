@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { searchItems, fetchItemRanking, toggleWatched, setProgress, updateItem, fetchLists, addToList } from '../api';
+import { searchItems, fetchItemRanking, setProgress, updateItem, fetchLists, addToList } from '../api';
 
 /** 排名条目展示组件 */
 function RankBadge({ label, data }) {
@@ -72,18 +72,11 @@ export default function Search() {
     }
   };
 
-  const handleToggleWatched = async (e, movie) => {
-    e.stopPropagation();
-    const newVal = movie.watched ? 0 : 1;
-    await toggleWatched(movie.id, newVal);
-    setResults(prev => prev.map(m => m.id === movie.id ? { ...m, watched: newVal } : m));
-  };
-
   const handleProgress = async (e, id, progress) => {
     e.stopPropagation();
+    const watchedVal = progress === '已看' ? 1 : 0;
     await setProgress(id, progress);
-    setResults(prev => prev.map(m => m.id === id ? { ...m, watch_progress: progress, watched: progress === '已看' ? 1 : m.watched } : m));
-    if (progress === '已看') await toggleWatched(id, 1);
+    setResults(prev => prev.map(m => m.id === id ? { ...m, watch_progress: progress, watched: watchedVal } : m));
   };
 
   const handleRate = async (e, movie, rating) => {
@@ -156,18 +149,12 @@ export default function Search() {
                     </div>
                     {/* 用户快捷操作 */}
                     <div className="user-actions" style={{marginTop:4}} onClick={e => e.stopPropagation()}>
-                      <button
-                        className={`watched-btn ${movie.watched ? 'watched' : ''}`}
-                        onClick={(e) => handleToggleWatched(e, movie)}
-                      >
-                        {movie.watched ? '✓ 已看' : '○ 未看'}
-                      </button>
                       <select
                         className={`progress-select ${movie.watch_progress === '想看' ? 'want' : movie.watch_progress === '在看' ? 'watching' : movie.watch_progress === '已看' ? 'watched-tag' : ''}`}
                         value={movie.watch_progress || ''}
                         onChange={e => handleProgress(e, movie.id, e.target.value)}
                       >
-                        <option value="">进度...</option>
+                        <option value="">状态...</option>
                         <option value="想看">想看</option>
                         <option value="在看">在看</option>
                         <option value="已看">已看</option>

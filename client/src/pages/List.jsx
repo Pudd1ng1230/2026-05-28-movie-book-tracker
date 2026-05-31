@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { fetchItems, deleteItem, toggleWatched, setProgress, updateItem, fetchLists, addToList } from '../api';
+import { fetchItems, deleteItem, setProgress, updateItem, fetchLists, addToList } from '../api';
 
 const typeLabels = { movie: '电影', tv: '剧集', book: '书籍' };
 const PROGRESS_OPTIONS = ['', '想看', '在看', '已看'];
@@ -82,17 +82,10 @@ export default function List() {
     setTotal(t => t - 1);
   };
 
-  // 乐观更新：立即改本地状态，不重新请求
-  const handleToggleWatched = async (item) => {
-    const newVal = item.watched ? 0 : 1;
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, watched: newVal } : i));
-    await toggleWatched(item.id, newVal);
-  };
-
   const handleProgress = async (id, progress) => {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, watch_progress: progress, watched: progress === '已看' ? 1 : i.watched } : i));
+    const watchedVal = progress === '已看' ? 1 : 0;
+    setItems(prev => prev.map(i => i.id === id ? { ...i, watch_progress: progress, watched: watchedVal } : i));
     await setProgress(id, progress);
-    if (progress === '已看') await toggleWatched(id, 1);
   };
 
   const handleRate = async (item, rating) => {
@@ -167,18 +160,12 @@ export default function List() {
                 {item.rating && <span className="rating">我的 ★{item.rating}</span>}
               </div>
               <div className="user-actions">
-                <button
-                  className={`watched-btn ${item.watched ? 'watched' : ''}`}
-                  onClick={() => handleToggleWatched(item)}
-                >
-                  {item.watched ? '✓ 已看' : '○ 未看'}
-                </button>
                 <select
                   className={`progress-select ${item.watch_progress === '想看' ? 'want' : item.watch_progress === '在看' ? 'watching' : item.watch_progress === '已看' ? 'watched-tag' : ''}`}
                   value={item.watch_progress || ''}
                   onChange={e => handleProgress(item.id, e.target.value)}
                 >
-                  {PROGRESS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt || '进度...'}</option>)}
+                  {PROGRESS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt || '状态...'}</option>)}
                 </select>
                 <div className="quick-rate">
                   {[1,2,3,4,5,6,7,8,9,10].map(n => (

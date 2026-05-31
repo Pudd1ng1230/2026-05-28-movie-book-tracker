@@ -305,16 +305,6 @@ body {
   display: flex; align-items: center; gap: 6px; margin-top: 6px;
   flex-wrap: wrap;
 }
-.user-actions .watched-btn {
-  font-size: 12px; padding: 3px 10px; border-radius: 12px; cursor: pointer;
-  border: 1px solid var(--border); background: transparent;
-  color: var(--text-muted); transition: all 0.2s;
-}
-.user-actions .watched-btn.watched {
-  background: rgba(145, 204, 117, 0.12); border-color: rgba(145, 204, 117, 0.3); color: #91cc75;
-}
-.user-actions .watched-btn:hover { border-color: var(--primary-dim); }
-
 .progress-select {
   font-size: 11px; padding: 3px 8px; border-radius: 10px;
   border: 1px solid var(--border); background: var(--input-bg);
