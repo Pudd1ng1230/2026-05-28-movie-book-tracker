@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchListItems, removeFromList, updateListItemProgress } from '../api';
+import { fetchListItems, removeFromList, updateListItemProgress, searchItems, addToList } from '../api';
 
 const PROGRESS_LABELS = { '想看': '📌', '在看': '👀', '已看': '✅' };
 
@@ -9,6 +9,10 @@ export default function ListDetail() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -31,14 +35,77 @@ export default function ListDetail() {
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, list_progress: progress } : i));
   };
 
+  const doSearch = useCallback(async (q) => {
+    if (!q.trim()) { setSearchResults([]); return; }
+    setSearching(true);
+    try {
+      const data = await searchItems(q.trim());
+      // 过滤掉已在清单中的电影
+      const existingIds = new Set(items.map(i => i.id));
+      setSearchResults(data.filter(m => !existingIds.has(m.id)));
+    } catch (e) { setSearchResults([]); }
+    setSearching(false);
+  }, [items]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => doSearch(searchQuery), 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery, doSearch]);
+
+  const handleAdd = async (itemId) => {
+    try {
+      await addToList(Number(id), itemId);
+      alert('已添加到清单！');
+      // 从搜索结果中移除
+      setSearchResults(prev => prev.filter(m => m.id !== itemId));
+      // 重新加载清单
+      load();
+    } catch (err) {
+      alert(err.response?.data?.error || '添加失败');
+    }
+  };
+
   if (loading) return <p className="loading">加载中...</p>;
 
   return (
     <div className="list-detail-page">
       <button className="btn btn-secondary" onClick={() => navigate('/lists')} style={{ marginBottom: 16 }}>← 返回清单</button>
 
+      {/* 搜索添加区域 */}
+      <div style={{ marginBottom: 20 }}>
+        <button
+          className="btn-sm"
+          onClick={() => setShowSearch(!showSearch)}
+          style={{ marginBottom: showSearch ? 10 : 0 }}
+        >
+          {showSearch ? '关闭搜索' : '+ 搜索添加电影'}
+        </button>
+        {showSearch && (
+          <div className="search-box" style={{ marginTop: 8 }}>
+            <input
+              type="text"
+              placeholder="输入电影名称搜索..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              autoFocus
+            />
+          </div>
+        )}
+        {showSearch && searching && <p className="loading" style={{ marginTop: 8, fontSize: 14 }}>搜索中...</p>}
+        {showSearch && searchResults.length > 0 && (
+          <div className="search-results-mini" style={{ marginTop: 10 }}>
+            {searchResults.slice(0, 10).map(m => (
+              <div key={m.id} className="search-result-row">
+                <span style={{ flex: 1 }}>{m.name} {m.year && `(${m.year})`}</span>
+                <button className="btn-sm" onClick={() => handleAdd(m.id)}>+ 添加</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {items.length === 0 ? (
-        <p className="empty">清单中还没有电影。去 <a href="/search">搜索页</a> 添加吧！</p>
+        <p className="empty">清单中还没有电影。点击上方「+ 搜索添加电影」开始添加吧！</p>
       ) : (
         <div className="list-detail-table-wrap">
           <table className="list-detail-table">

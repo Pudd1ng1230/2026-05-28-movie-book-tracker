@@ -63,7 +63,9 @@ router.post('/:id/items', (req, res) => {
   // 防重复
   const dup = db.prepare('SELECT id FROM list_items WHERE list_id = ? AND item_id = ?').get(req.params.id, item_id);
   if (dup) return res.status(409).json({ error: '该电影已在清单中' });
-  db.prepare('INSERT INTO list_items (list_id, item_id) VALUES (?, ?)').run(req.params.id, item_id);
+  // 同步：添加时复制电影的当前 watch_progress 到清单项
+  db.prepare('INSERT INTO list_items (list_id, item_id, watch_progress) VALUES (?, ?, ?)')
+    .run(req.params.id, item_id, item.watch_progress || '');
   res.status(201).json({ ok: true });
 });
 
@@ -73,12 +75,17 @@ router.delete('/:id/items/:itemId', (req, res) => {
   res.json({ ok: true });
 });
 
-// 更新清单内电影的观看状态
+// 更新清单内电影的观看状态（同时同步到全局 item）
 router.patch('/:id/items/:itemId/progress', (req, res) => {
   const { progress } = req.body;
+  const val = progress || '';
+  // 更新清单内的进度
   db.prepare('UPDATE list_items SET watch_progress = ? WHERE list_id = ? AND item_id = ?')
-    .run(progress || '', req.params.id, req.params.itemId);
-  res.json({ ok: true, progress: progress || '' });
+    .run(val, req.params.id, req.params.itemId);
+  // 同步到全局 items 表
+  db.prepare('UPDATE items SET watch_progress = ?, watched = ? WHERE id = ?')
+    .run(val, val === '已看' ? 1 : 0, req.params.itemId);
+  res.json({ ok: true, progress: val });
 });
 
 module.exports = router;

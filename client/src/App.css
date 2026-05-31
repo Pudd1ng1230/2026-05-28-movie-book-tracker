@@ -5,7 +5,7 @@
 
 :root {
   /* 基础色 — 暗色系统 */
-  --bg: #08080a;
+  --bg: #0f0f15;
   --surface: rgba(18, 18, 22, 0.75);
   --border: rgba(255, 255, 255, 0.06);
   --border-light: rgba(255, 255, 255, 0.04);
@@ -492,6 +492,23 @@ body {
   padding: 8px 18px; border-radius: 7px; border: none; font-size: 13px;
   cursor: pointer; font-weight: 500; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* ═══════════════════════════════════════
+   清单内搜索添加
+   ═══════════════════════════════════════ */
+.search-results-mini {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 300px; overflow-y: auto;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px;
+}
+.search-result-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 8px; border-radius: 6px; font-size: 14px;
+  transition: background 0.15s;
+}
+.search-result-row:hover { background: var(--card-hover); }
+.search-result-row span { color: var(--text); }
 
 /* ═══════════════════════════════════════
    响应式

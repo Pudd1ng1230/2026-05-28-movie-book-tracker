@@ -195,14 +195,18 @@ router.patch('/:id/watched', (req, res) => {
   res.json({ ok: true, watched: val });
 });
 
-// ── 用户操作：更新观看进度 ──
+// ── 用户操作：更新观看进度（同时同步到所有清单） ──
 router.patch('/:id/progress', (req, res) => {
   const existing = db.prepare('SELECT id FROM items WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Not found' });
 
   const { progress } = req.body;
-  db.prepare('UPDATE items SET watch_progress = ? WHERE id = ?').run(progress || '', req.params.id);
-  res.json({ ok: true, progress: progress || '' });
+  const val = progress || '';
+  // 更新全局进度
+  db.prepare('UPDATE items SET watch_progress = ? WHERE id = ?').run(val, req.params.id);
+  // 同步到所有包含此电影的清单
+  db.prepare('UPDATE list_items SET watch_progress = ? WHERE item_id = ?').run(val, req.params.id);
+  res.json({ ok: true, progress: val });
 });
 
 // Delete item
