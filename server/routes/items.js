@@ -94,7 +94,7 @@ router.get('/:id/ranking', (req, res) => {
 
 // List all items with optional filters + pagination
 router.get('/', (req, res) => {
-  const { type, category, search, sort, watched, has_review, limit, offset } = req.query;
+  const { type, category, search, sort, watched, has_review, progress, rating_min, rating_max, has_interaction, limit, offset } = req.query;
   let where = 'WHERE 1=1';
   const params = [];
 
@@ -103,6 +103,10 @@ router.get('/', (req, res) => {
   if (search) { where += ' AND name LIKE ?'; params.push(`%${search}%`); }
   if (watched !== undefined) { where += ' AND watched = ?'; params.push(watched === '1' ? 1 : 0); }
   if (has_review === '1') { where += " AND review != ''"; }
+  if (progress) { where += ' AND watch_progress = ?'; params.push(progress); }
+  if (rating_min) { where += ' AND rating >= ?'; params.push(Number(rating_min)); }
+  if (rating_max) { where += ' AND rating <= ?'; params.push(Number(rating_max)); }
+  if (has_interaction === '1') { where += " AND (watched = 1 OR rating IS NOT NULL OR review != '')"; }
 
   let orderBy = ' ORDER BY created_at DESC';
   if (sort === 'rating_desc') orderBy = ' ORDER BY rating DESC';

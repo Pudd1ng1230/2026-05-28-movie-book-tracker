@@ -16,6 +16,9 @@ export default function List() {
   const [sort, setSort] = useState(searchParams.get('sort') || '');
   const [watched, setWatched] = useState(searchParams.get('watched') || '');
   const [progress, setProgressFilter] = useState(searchParams.get('progress') || '');
+  const [ratingMin, setRatingMin] = useState(searchParams.get('rating_min') || '');
+  const [ratingMax, setRatingMax] = useState(searchParams.get('rating_max') || '');
+  const [hasInteraction, setHasInteraction] = useState(searchParams.get('has_interaction') || '');
   const [offset, setOffset] = useState(0);
 
   const load = useCallback(async (append = false) => {
@@ -25,6 +28,10 @@ export default function List() {
     if (search) params.search = search;
     if (sort) params.sort = sort;
     if (watched) params.watched = watched;
+    if (progress) params.progress = progress;
+    if (ratingMin) params.rating_min = ratingMin;
+    if (ratingMax) params.rating_max = ratingMax;
+    if (hasInteraction) params.has_interaction = hasInteraction;
     const data = await fetchItems(params);
     setItems(append ? [...items, ...data.items] : data.items);
     setTotal(data.total);
@@ -40,11 +47,15 @@ export default function List() {
     if (search) params.search = search;
     if (sort) params.sort = sort;
     if (watched) params.watched = watched;
+    if (progress) params.progress = progress;
+    if (ratingMin) params.rating_min = ratingMin;
+    if (ratingMax) params.rating_max = ratingMax;
+    if (hasInteraction) params.has_interaction = hasInteraction;
     fetchItems(params).then(data => {
       setItems(data.items);
       setTotal(data.total);
     });
-  }, [type, sort, watched]);
+  }, [type, sort, watched, progress, ratingMin, ratingMax, hasInteraction]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -88,7 +99,12 @@ export default function List() {
 
   const loadMore = () => {
     const newOffset = offset + PAGE_SIZE;
-    fetchItems({ type, search, sort, watched, limit: PAGE_SIZE, offset: newOffset }).then(data => {
+    const params = { type, search, sort, watched, limit: PAGE_SIZE, offset: newOffset };
+    if (progress) params.progress = progress;
+    if (ratingMin) params.rating_min = ratingMin;
+    if (ratingMax) params.rating_max = ratingMax;
+    if (hasInteraction) params.has_interaction = hasInteraction;
+    fetchItems(params).then(data => {
       setItems(prev => [...prev, ...data.items]);
       setTotal(data.total);
       setOffset(newOffset);

@@ -67,26 +67,26 @@ export default function Profile() {
           <div className="stat-value">{summary.avgRating || '-'}</div>
           <div className="stat-label">我的均分 →</div>
         </div>
-        <div className="stat-card clickable">
+        <div className="stat-card clickable" onClick={() => goToList({ progress: '在看' })} title="点击查看在看的电影">
           <div className="stat-icon">👀</div>
           <div className="stat-value">{summary.watching || 0}</div>
-          <div className="stat-label">在看</div>
+          <div className="stat-label">在看 →</div>
         </div>
-        <div className="stat-card clickable">
+        <div className="stat-card clickable" onClick={() => goToList({ progress: '想看' })} title="点击查看想看的电影">
           <div className="stat-icon">📌</div>
           <div className="stat-value">{summary.wantWatch || 0}</div>
-          <div className="stat-label">想看</div>
+          <div className="stat-label">想看 →</div>
         </div>
-        <div className="stat-card clickable">
+        <div className="stat-card clickable" onClick={() => goToList({ has_interaction: '1' })} title="点击查看有互动的电影">
           <div className="stat-icon">📝</div>
           <div className="stat-value">{summary.total || 0}</div>
-          <div className="stat-label">互动总数</div>
+          <div className="stat-label">互动总数 →</div>
         </div>
         {ratingTiers && (
           <>
-            <div className="stat-card"><div className="stat-icon">🔥</div><div className="stat-value" style={{color:'#ee6666'}}>{ratingTiers.high}</div><div className="stat-label">高分 (≥8)</div></div>
-            <div className="stat-card"><div className="stat-icon">👍</div><div className="stat-value" style={{color:'#f5a623'}}>{ratingTiers.mid}</div><div className="stat-label">中等 (5-7)</div></div>
-            <div className="stat-card"><div className="stat-icon">👎</div><div className="stat-value" style={{color:'#999'}}>{ratingTiers.low}</div><div className="stat-label">低分 (≤4)</div></div>
+            <div className="stat-card clickable" onClick={() => goToList({ rating_min: '8' })} title="点击查看高分电影 (≥8分)"><div className="stat-icon">🔥</div><div className="stat-value" style={{color:'#ee6666'}}>{ratingTiers.high}</div><div className="stat-label">高分 (≥8) →</div></div>
+            <div className="stat-card clickable" onClick={() => goToList({ rating_min: '5', rating_max: '7' })} title="点击查看中等评分电影 (5-7分)"><div className="stat-icon">👍</div><div className="stat-value" style={{color:'#f5a623'}}>{ratingTiers.mid}</div><div className="stat-label">中等 (5-7) →</div></div>
+            <div className="stat-card clickable" onClick={() => goToList({ rating_max: '4' })} title="点击查看低分电影 (≤4分)"><div className="stat-icon">👎</div><div className="stat-value" style={{color:'#999'}}>{ratingTiers.low}</div><div className="stat-label">低分 (≤4) →</div></div>
           </>
         )}
       </div>
