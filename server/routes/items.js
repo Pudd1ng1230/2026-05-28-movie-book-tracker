@@ -2,15 +2,106 @@ const express = require('express');
 const db = require('../db');
 const router = express.Router();
 
+// ── 搜索电影（模糊匹配名称，返回列表+简要排名） ──
+router.get('/search', (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) return res.json([]);
+
+  const movies = db.prepare(`
+    SELECT id, name, year, director, category, poster,
+           douban_rating, douban_votes, rating,
+           watched, watch_progress, review
+    FROM items
+    WHERE type = 'movie' AND (name LIKE ? OR director LIKE ?)
+    ORDER BY douban_rating DESC
+    LIMIT 50
+  `).all(`%${q}%`, `%${q}%`);
+
+  // 统计总量（用于排名计算）
+  const totalMovies = db.prepare(
+    "SELECT COUNT(*) AS cnt FROM items WHERE type = 'movie' AND douban_rating IS NOT NULL"
+  ).get().cnt;
+
+  // 为每部电影附加简要排名
+  const results = movies.map(m => {
+    const betterCount = db.prepare(
+      "SELECT COUNT(*) AS cnt FROM items WHERE type = 'movie' AND douban_rating > ?"
+    ).get(m.douban_rating || 0).cnt;
+
+    return {
+      ...m,
+      tags: [],
+      overall_rank: betterCount + 1,
+      overall_total: totalMovies,
+      overall_percentile: totalMovies > 0
+        ? Math.round((1 - (betterCount + 1) / totalMovies) * 100)
+        : 0,
+    };
+  });
+
+  res.json(results);
+});
+
+// ── 电影详细排名（按 ID） ──
+router.get('/:id/ranking', (req, res) => {
+  const movie = db.prepare(
+    'SELECT id, name, year, director, category, douban_rating, douban_votes, rating FROM items WHERE id = ? AND type = ?'
+  ).get(req.params.id, 'movie');
+
+  if (!movie) return res.status(404).json({ error: 'Not found or not a movie' });
+
+  const score = movie.douban_rating || movie.rating || 0;
+  const year = movie.year;
+  const director = movie.director;
+  // 取第一个分类
+  const firstCategory = (movie.category || '').split('/')[0].trim();
+
+  const rank = (extraWhere, extraParam) => {
+    const baseWhere = extraParam !== undefined
+      ? `type = 'movie' AND ${extraWhere}`
+      : "type = 'movie'";
+
+    // 比当前电影评分更高的数量（extraParam 对应 extraWhere 中的 ?，score 对应 douban_rating > ?）
+    const betterParams = extraParam !== undefined ? [extraParam, score] : [score];
+    const betterSql = `SELECT COUNT(*) AS cnt FROM items WHERE ${baseWhere} AND douban_rating > ?`;
+    const better = db.prepare(betterSql).get(...betterParams).cnt;
+
+    // 该维度总电影数
+    const totalParams = extraParam !== undefined ? [extraParam] : [];
+    const totalSql = `SELECT COUNT(*) AS cnt FROM items WHERE ${baseWhere} AND douban_rating IS NOT NULL`;
+    const total = db.prepare(totalSql).get(...totalParams).cnt;
+
+    return {
+      rank: better + 1,
+      total,
+      percentile: total > 0 ? Math.round((1 - (better + 1) / total) * 100) : 0,
+    };
+  };
+
+  const ranking = {
+    overall: rank(),
+    by_year: year ? rank('year = ?', year) : null,
+    by_category: firstCategory
+      ? rank('category LIKE ?', `${firstCategory}%`)
+      : null,
+    by_director: director
+      ? rank('director = ?', director)
+      : null,
+  };
+
+  res.json({ movie, ranking });
+});
+
 // List all items with optional filters
 router.get('/', (req, res) => {
-  const { type, category, search, sort } = req.query;
+  const { type, category, search, sort, watched } = req.query;
   let sql = 'SELECT * FROM items WHERE 1=1';
   const params = [];
 
   if (type) { sql += ' AND type = ?'; params.push(type); }
   if (category) { sql += ' AND category = ?'; params.push(category); }
   if (search) { sql += ' AND name LIKE ?'; params.push(`%${search}%`); }
+  if (watched !== undefined) { sql += ' AND watched = ?'; params.push(watched === '1' ? 1 : 0); }
 
   if (sort === 'rating_desc') sql += ' ORDER BY rating DESC';
   else if (sort === 'rating_asc') sql += ' ORDER BY rating ASC';
@@ -71,6 +162,27 @@ router.put('/:id', (req, res) => {
   params.push(req.params.id);
   db.prepare(`UPDATE items SET ${sets.join(', ')} WHERE id = ?`).run(...params);
   res.json({ ok: true });
+});
+
+// ── 用户操作：标记已看/未看 ──
+router.patch('/:id/watched', (req, res) => {
+  const existing = db.prepare('SELECT id FROM items WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+
+  const { watched } = req.body;
+  const val = watched ? 1 : 0;
+  db.prepare('UPDATE items SET watched = ? WHERE id = ?').run(val, req.params.id);
+  res.json({ ok: true, watched: val });
+});
+
+// ── 用户操作：更新观看进度 ──
+router.patch('/:id/progress', (req, res) => {
+  const existing = db.prepare('SELECT id FROM items WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+
+  const { progress } = req.body;
+  db.prepare('UPDATE items SET watch_progress = ? WHERE id = ?').run(progress || '', req.params.id);
+  res.json({ ok: true, progress: progress || '' });
 });
 
 // Delete item

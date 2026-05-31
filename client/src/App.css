@@ -21,8 +21,13 @@ body {
 .app { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
 
 .navbar {
+  position: sticky; top: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+  padding: 12px 20px; margin: 0 -16px 24px;
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 .logo { font-size: 22px; font-weight: 700; color: var(--primary); }
 .nav-links { display: flex; gap: 24px; }
@@ -125,3 +130,213 @@ body {
 
 @media (max-width: 700px) { .charts { grid-template-columns: 1fr; } }
 .loading { text-align: center; margin-top: 60px; color: var(--text-light); }
+
+/* ── 次级导航 ── */
+.nav-secondary {
+  font-size: 13px !important;
+  opacity: 0.65;
+}
+.nav-secondary:hover { opacity: 1; }
+
+/* ── 搜索页 ── */
+.search-page h2 { margin-bottom: 6px; color: var(--primary); }
+.search-hint { color: var(--text-light); font-size: 14px; margin-bottom: 20px; }
+
+.search-box {
+  display: flex; gap: 10px; margin-bottom: 24px;
+}
+.search-box input {
+  flex: 1; padding: 12px 16px; border: 2px solid var(--border);
+  border-radius: var(--radius); font-size: 16px; background: var(--card-bg);
+  transition: border-color 0.2s;
+}
+.search-box input:focus { border-color: var(--primary); outline: none; }
+.search-box button {
+  padding: 12px 28px; background: var(--primary); color: #fff;
+  border: none; border-radius: var(--radius); cursor: pointer; font-size: 16px;
+  white-space: nowrap;
+}
+
+.result-count { color: var(--text-light); font-size: 14px; margin-bottom: 12px; }
+
+.search-list { display: flex; flex-direction: column; gap: 10px; }
+
+.search-card {
+  background: var(--card-bg); border-radius: var(--radius);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;
+}
+
+.search-card-header {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+  cursor: pointer; transition: background 0.15s; user-select: none;
+}
+.search-card-header:hover { background: #f8f9fc; }
+
+.search-card-poster {
+  width: 60px; height: 84px; flex-shrink: 0; border-radius: 4px;
+  overflow: hidden; background: #e8eaf0; display: flex;
+  align-items: center; justify-content: center;
+}
+.search-card-poster img { width: 100%; height: 100%; object-fit: cover; }
+
+.search-card-info { flex: 1; min-width: 0; }
+.search-card-info h3 { font-size: 16px; margin-bottom: 4px; }
+.search-card-meta {
+  font-size: 13px; color: var(--text-light); display: flex;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 6px;
+}
+.category-tag {
+  background: #e8ecf4; color: var(--primary); padding: 1px 8px;
+  border-radius: 10px; font-size: 12px;
+}
+
+.search-card-scores {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  font-size: 13px;
+}
+.douban-score { color: #f5a623; font-weight: 600; }
+.douban-votes { color: var(--text-light); font-size: 12px; }
+.overall-mini {
+  background: #f0f0f5; padding: 2px 10px; border-radius: 10px;
+  font-size: 12px; color: #666;
+}
+
+.expand-arrow { font-size: 20px; color: var(--text-light); width: 24px; text-align: center; }
+
+/* ── 排名面板 ── */
+.ranking-panel {
+  border-top: 1px solid var(--border); padding: 16px 20px;
+  background: #fafbfd;
+  animation: slideDown 0.2s ease;
+}
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 400px; }
+}
+
+.ranking-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+@media (max-width: 600px) { .ranking-grid { grid-template-columns: 1fr; } }
+
+.rank-badge {
+  background: #fff; border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 14px;
+}
+.rank-label { display: block; font-size: 12px; color: var(--text-light); margin-bottom: 4px; }
+.rank-value { font-size: 18px; font-weight: 700; color: var(--primary); }
+.rank-pct {
+  font-size: 13px; color: #91cc75; margin-left: 6px;
+}
+
+.rank-bar {
+  height: 4px; background: #e8eaf0; border-radius: 2px; margin-top: 8px;
+}
+.rank-bar-fill {
+  height: 100%; background: var(--primary); border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.error-text { color: var(--danger); font-size: 14px; }
+
+/* ── 用户操作区 ── */
+.user-actions {
+  display: flex; align-items: center; gap: 8px; margin-top: 6px;
+}
+.user-actions .watched-btn {
+  font-size: 12px; padding: 3px 10px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-light); transition: all 0.15s;
+}
+.user-actions .watched-btn.watched {
+  background: #e8f5e9; border-color: #66bb6a; color: #2e7d32;
+}
+.user-actions .watched-btn:hover { border-color: var(--primary); }
+
+.progress-select {
+  font-size: 11px; padding: 3px 8px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--card-bg);
+  color: var(--text-light); cursor: pointer;
+}
+.progress-select.want    { background: #fff3e0; border-color: #ff9800; color: #e65100; }
+.progress-select.watching { background: #e3f2fd; border-color: #2196f3; color: #0d47a1; }
+.progress-select.watched-tag { background: #e8f5e9; border-color: #66bb6a; color: #2e7d32; }
+
+.quick-rate {
+  display: flex; align-items: center; gap: 2px; font-size: 13px;
+}
+.quick-rate .star {
+  cursor: pointer; color: #ddd; transition: color 0.1s;
+  user-select: none;
+}
+.quick-rate .star.active { color: #f5a623; }
+.quick-rate .star:hover { color: #f5a623; }
+.quick-rate .user-rating-label {
+  font-size: 11px; color: var(--text-light); margin-left: 4px;
+}
+
+.user-review-mini {
+  font-size: 12px; color: #666; font-style: italic;
+  margin-top: 4px; display: -webkit-box;
+  -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ── 个人主页 ── */
+.profile-page h2 { margin-bottom: 6px; color: var(--primary); }
+.profile-subtitle { color: var(--text-light); font-size: 14px; margin-bottom: 20px; }
+
+.profile-tabs {
+  display: flex; gap: 0; margin-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+.profile-tabs button {
+  padding: 10px 24px; border: none; background: transparent;
+  font-size: 14px; color: var(--text-light); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all 0.2s;
+}
+.profile-tabs button:hover { color: var(--primary); }
+.profile-tabs button.active {
+  color: var(--primary); border-bottom-color: var(--primary); font-weight: 600;
+}
+
+.profile-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px; margin-bottom: 24px;
+}
+.profile-summary .stat-card {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 14px 16px; text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.stat-card .stat-icon { font-size: 22px; margin-bottom: 4px; }
+.stat-card .stat-value { font-size: 22px; font-weight: 700; color: var(--primary); }
+.stat-card .stat-label { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+.profile-review-list {
+  background: var(--card-bg); border-radius: var(--radius);
+  padding: 16px 20px; margin-bottom: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.profile-review-list h3 { margin-bottom: 12px; font-size: 15px; }
+.review-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid #f0f0f5;
+}
+.review-item:last-child { border-bottom: none; }
+.review-item .review-poster {
+  width: 40px; height: 56px; border-radius: 4px;
+  overflow: hidden; background: #e8eaf0; flex-shrink: 0;
+}
+.review-item .review-poster img { width: 100%; height: 100%; object-fit: cover; }
+.review-item .review-body { flex: 1; min-width: 0; }
+.review-item .review-name { font-size: 14px; font-weight: 500; }
+.review-item .review-text { font-size: 13px; color: var(--text-light); font-style: italic; }
+.review-item .review-rating { color: #f5a623; font-size: 13px; white-space: nowrap; }
+
+@media (max-width: 700px) {
+  .navbar { flex-direction: column; gap: 10px; }
+  .nav-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .profile-summary { grid-template-columns: repeat(3, 1fr); }
+}

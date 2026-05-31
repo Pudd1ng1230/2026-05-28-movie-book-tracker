@@ -24,4 +24,29 @@ db.exec(`
   )
 `);
 
+// ---- migrations ----
+const migrate = (colName, colDef) => {
+  const exists = db.prepare(
+    "SELECT COUNT(*) AS cnt FROM pragma_table_info('items') WHERE name = ?"
+  ).get(colName);
+  if (exists && exists.cnt === 0) {
+    db.exec(`ALTER TABLE items ADD COLUMN ${colName} ${colDef}`);
+    console.log(`[migrate] added column: ${colName}`);
+  }
+};
+
+migrate('douban_id',      'TEXT');
+migrate('douban_rating',  'REAL');
+migrate('douban_votes',   'INTEGER');
+migrate('regions',        "TEXT DEFAULT ''");
+migrate('languages',      "TEXT DEFAULT ''");
+migrate('actors',         "TEXT DEFAULT ''");
+migrate('watched',        'INTEGER DEFAULT 0');
+migrate('watch_progress', "TEXT DEFAULT ''");
+
+// unique index on douban_id (skip if already exists)
+try {
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_items_douban_id ON items(douban_id)');
+} catch (_) { /* index may already exist */ }
+
 module.exports = db;
