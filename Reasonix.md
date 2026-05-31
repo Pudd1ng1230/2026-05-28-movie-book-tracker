@@ -84,11 +84,14 @@ movie-book-tracker/
 ### 电影 CRUD
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/items?type=&category=&search=&sort=&watched=` | 列表（支持 watched 筛选 0/1） |
+| GET | `/api/items?type=&search=&sort=&watched=&has_review=&limit=&offset=` | 分页列表，返回 `{ items, total }` |
 | GET | `/api/items/:id` | 详情 |
 | POST | `/api/items` | 新增 |
 | PUT | `/api/items/:id` | 更新（支持 rating/review/watched 等所有字段） |
 | DELETE | `/api/items/:id` | 删除 |
+
+**分页参数**：`limit`（每页条数）、`offset`（偏移量）。不传则返回全部。
+**筛选参数**：`watched=0\|1`、`has_review=1`（仅返回有影评的条目）。
 
 ### 搜索与排名
 | 方法 | 路径 | 说明 |
@@ -234,7 +237,7 @@ cd server && node scraper.js    # 首次约 30 分钟爬 ~3000 部
 ## 当前会话已完成的改动（2026-05-31）
 
 1. **数据库迁移**：`db.js` 新增 `watched`（INTEGER DEFAULT 0）和 `watch_progress`（TEXT DEFAULT ''）
-2. **用户操作 API**：`items.js` 新增 `PATCH /:id/watched`、`PATCH /:id/progress`；搜索接口返回用户字段；列表支持 `watched` 筛选
+2. **用户操作 API**：`items.js` 新增 `PATCH /:id/watched`、`PATCH /:id/progress`；搜索接口返回用户字段；列表支持 `watched`/`has_review` 筛选 + 分页（`limit`/`offset`）
 3. **个人分析 API**：`analytics.js` 新增 `GET /personal/all`，数据范围 = 已标记/打分/写评的电影
 4. **前端升级**：
    - 导航重构：吸顶毛玻璃 + 「👤 我的」入口
@@ -242,7 +245,14 @@ cd server && node scraper.js    # 首次约 30 分钟爬 ~3000 部
    - 搜索卡片新增用户快捷操作
    - 新建 `Profile.jsx` 个人主页：观影概览 + 个人分析图表 + 影评列表
 5. **多值字段拆分**：`analytics.js` 新增 `splitAggregate()` 工具函数，category 按 `/` 拆分、director 按 `, ` 拆分、tags 按 `/` 拆分后独立聚合计算平均分
-6. **README.md**：重写为用户向电影网站定位，覆盖全部功能说明和 API 文档
+6. **README.md**：重写为用户向电影网站定位
+7. **测试数据**：为 100 部电影写入模拟用户数据（评分/影评/进度/已看）
+8. **🔧 性能优化（解决卡顿）**：
+   - 后端分页：`GET /api/items` 返回 `{ items, total }`，支持 `limit`/`offset`
+   - List.jsx：每次只加载 50 条，「加载更多」按钮按需追加；海报 `loading="lazy"`；乐观更新（操作后不改全量刷新）
+   - Profile.jsx：统计卡片可点击跳转到清单页（带筛选参数）；影评列表改用 `has_review=1` 专用查询替代全量拉取
+   - Search.jsx：`useCallback` 稳定 `doSearch` 引用，修复 useEffect 闭包陷阱
+   - 所有 `<img>` 添加 `loading="lazy"` 属性
 
 ## 注意事项
 

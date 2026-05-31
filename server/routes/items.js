@@ -92,25 +92,41 @@ router.get('/:id/ranking', (req, res) => {
   res.json({ movie, ranking });
 });
 
-// List all items with optional filters
+// List all items with optional filters + pagination
 router.get('/', (req, res) => {
-  const { type, category, search, sort, watched } = req.query;
-  let sql = 'SELECT * FROM items WHERE 1=1';
+  const { type, category, search, sort, watched, has_review, limit, offset } = req.query;
+  let where = 'WHERE 1=1';
   const params = [];
 
-  if (type) { sql += ' AND type = ?'; params.push(type); }
-  if (category) { sql += ' AND category = ?'; params.push(category); }
-  if (search) { sql += ' AND name LIKE ?'; params.push(`%${search}%`); }
-  if (watched !== undefined) { sql += ' AND watched = ?'; params.push(watched === '1' ? 1 : 0); }
+  if (type) { where += ' AND type = ?'; params.push(type); }
+  if (category) { where += ' AND category = ?'; params.push(category); }
+  if (search) { where += ' AND name LIKE ?'; params.push(`%${search}%`); }
+  if (watched !== undefined) { where += ' AND watched = ?'; params.push(watched === '1' ? 1 : 0); }
+  if (has_review === '1') { where += " AND review != ''"; }
 
-  if (sort === 'rating_desc') sql += ' ORDER BY rating DESC';
-  else if (sort === 'rating_asc') sql += ' ORDER BY rating ASC';
-  else if (sort === 'date_desc') sql += ' ORDER BY date DESC';
-  else if (sort === 'date_asc') sql += ' ORDER BY date ASC';
-  else sql += ' ORDER BY created_at DESC';
+  let orderBy = ' ORDER BY created_at DESC';
+  if (sort === 'rating_desc') orderBy = ' ORDER BY rating DESC';
+  else if (sort === 'rating_asc') orderBy = ' ORDER BY rating ASC';
+  else if (sort === 'date_desc') orderBy = ' ORDER BY date DESC';
+  else if (sort === 'date_asc') orderBy = ' ORDER BY date ASC';
 
-  const items = db.prepare(sql).all(...params);
-  res.json(items.map(item => ({ ...item, tags: JSON.parse(item.tags || '[]') })));
+  // 总数
+  const countSql = `SELECT COUNT(*) AS cnt FROM items ${where}`;
+  const total = db.prepare(countSql).get(...params).cnt;
+
+  // 分页数据
+  let dataSql = `SELECT * FROM items ${where}${orderBy}`;
+  const dataParams = [...params];
+  const lim = parseInt(limit, 10) || 0;
+  const off = parseInt(offset, 10) || 0;
+  if (lim > 0) { dataSql += ' LIMIT ? OFFSET ?'; dataParams.push(lim, off); }
+
+  const items = db.prepare(dataSql).all(...dataParams);
+
+  res.json({
+    items: items.map(item => ({ ...item, tags: JSON.parse(item.tags || '[]') })),
+    total,
+  });
 });
 
 // Get single item

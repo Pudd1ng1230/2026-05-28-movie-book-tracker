@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { searchItems, fetchItemRanking, toggleWatched, setProgress, updateItem } from '../api';
 
 /** 排名条目展示组件 */
@@ -29,11 +29,8 @@ export default function Search() {
   const [rankingCache, setRankingCache] = useState({});
   const [rankingLoading, setRankingLoading] = useState(false);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    const q = query.trim();
-    if (!q) return;
-
+  const doSearch = useCallback(async (q) => {
+    if (!q) { setResults([]); return; }
     setLoading(true);
     setExpandedId(null);
     try {
@@ -45,6 +42,11 @@ export default function Search() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    doSearch(query.trim());
   };
 
   const toggleRanking = async (id) => {
@@ -89,15 +91,11 @@ export default function Search() {
 
   // 自动搜索：输入后延迟搜索
   useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      return;
-    }
-    const timer = setTimeout(() => {
-      handleSearch({ preventDefault: () => {} });
-    }, 500);
+    const q = query.trim();
+    if (!q) { setResults([]); return; }
+    const timer = setTimeout(() => doSearch(q), 400);
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, doSearch]);
 
   return (
     <div className="search-page">
@@ -130,7 +128,7 @@ export default function Search() {
                 >
                   <div className="search-card-poster">
                     {movie.poster ? (
-                      <img src={movie.poster} alt={movie.name} />
+                      <img src={movie.poster} alt={movie.name} loading="lazy" />
                     ) : (
                       <div className="no-poster">🎬</div>
                     )}
