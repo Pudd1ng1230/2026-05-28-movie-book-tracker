@@ -5,7 +5,7 @@
 
 :root {
   /* 基础色 — 暗色系统 */
-  --bg: #0f0f15;
+  --bg: #0c0c16;
   --surface: rgba(18, 18, 22, 0.75);
   --border: rgba(255, 255, 255, 0.06);
   --border-light: rgba(255, 255, 255, 0.04);
