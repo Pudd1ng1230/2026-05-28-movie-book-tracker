@@ -19,7 +19,30 @@ function Chart({ option }) {
   }, []);
 
   useEffect(() => {
-    if (chart.current) chart.current.setOption(option, true);
+    if (!chart.current) return;
+    // 暗色主题默认样式：所有文字设为亮色
+    const darkOption = {
+      ...option,
+      title: option.title ? {
+        ...option.title,
+        textStyle: { color: '#e4e4f0', fontSize: 14, ...(option.title.textStyle || {}) },
+      } : undefined,
+      xAxis: option.xAxis ? {
+        ...option.xAxis,
+        nameTextStyle: { color: '#9090a4', ...(option.xAxis.nameTextStyle || {}) },
+        axisLabel: { color: '#9090a4', ...(option.xAxis.axisLabel || {}) },
+      } : undefined,
+      yAxis: option.yAxis ? {
+        ...option.yAxis,
+        nameTextStyle: { color: '#9090a4', ...(option.yAxis.nameTextStyle || {}) },
+        axisLabel: { color: '#9090a4', ...(option.yAxis.axisLabel || {}) },
+      } : undefined,
+      legend: option.legend ? {
+        ...option.legend,
+        textStyle: { color: '#9090a4', ...(option.legend.textStyle || {}) },
+      } : undefined,
+    };
+    chart.current.setOption(darkOption, true);
   }, [option]);
 
   return <div ref={ref} style={{ width: '100%', height: 350 }} />;
