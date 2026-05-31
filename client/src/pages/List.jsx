@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { fetchItems, deleteItem, toggleWatched, setProgress, updateItem } from '../api';
+import { fetchItems, deleteItem, toggleWatched, setProgress, updateItem, fetchLists, addToList } from '../api';
 
 const typeLabels = { movie: '电影', tv: '剧集', book: '书籍' };
 const PROGRESS_OPTIONS = ['', '想看', '在看', '已看'];
@@ -20,6 +20,9 @@ export default function List() {
   const [ratingMax, setRatingMax] = useState(searchParams.get('rating_max') || '');
   const [hasInteraction, setHasInteraction] = useState(searchParams.get('has_interaction') || '');
   const [offset, setOffset] = useState(0);
+  const [lists, setLists] = useState([]);
+
+  useEffect(() => { fetchLists().then(setLists).catch(() => {}); }, []);
 
   const load = useCallback(async (append = false) => {
     setLoading(true);
@@ -194,6 +197,25 @@ export default function List() {
               <div className="item-actions">
                 <Link to={`/edit/${item.id}`} className="btn-sm">编辑</Link>
                 <button className="btn-sm btn-danger" onClick={() => handleDelete(item.id)}>删除</button>
+                {lists.length > 0 && (
+                  <select
+                    className="add-to-list-select"
+                    value=""
+                    onChange={async (e) => {
+                      if (!e.target.value) return;
+                      try {
+                        await addToList(Number(e.target.value), item.id);
+                        e.target.value = '';
+                        alert('已添加到清单！');
+                      } catch (err) {
+                        alert(err.response?.data?.error || '添加失败');
+                      }
+                    }}
+                  >
+                    <option value="">+ 清单</option>
+                    {lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                  </select>
+                )}
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { searchItems, fetchItemRanking, toggleWatched, setProgress, updateItem } from '../api';
+import { searchItems, fetchItemRanking, toggleWatched, setProgress, updateItem, fetchLists, addToList } from '../api';
 
 /** 排名条目展示组件 */
 function RankBadge({ label, data }) {
@@ -28,6 +28,9 @@ export default function Search() {
   const [expandedId, setExpandedId] = useState(null);
   const [rankingCache, setRankingCache] = useState({});
   const [rankingLoading, setRankingLoading] = useState(false);
+  const [lists, setLists] = useState([]);
+
+  useEffect(() => { fetchLists().then(setLists).catch(() => {}); }, []);
 
   const doSearch = useCallback(async (q) => {
     if (!q) { setResults([]); return; }
@@ -180,6 +183,25 @@ export default function Search() {
                           </span>
                         ))}
                       </div>
+                      {lists.length > 0 && (
+                        <select
+                          className="add-to-list-select"
+                          value=""
+                          onChange={async (e) => {
+                            if (!e.target.value) return;
+                            try {
+                              await addToList(Number(e.target.value), movie.id);
+                              e.target.value = '';
+                              alert('已添加到清单！');
+                            } catch (err) {
+                              alert(err.response?.data?.error || '添加失败');
+                            }
+                          }}
+                        >
+                          <option value="">+ 加到清单</option>
+                          {lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                        </select>
+                      )}
                     </div>
                   </div>
                   <div className="expand-arrow">

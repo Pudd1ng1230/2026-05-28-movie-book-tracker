@@ -44,6 +44,27 @@ migrate('actors',         "TEXT DEFAULT ''");
 migrate('watched',        'INTEGER DEFAULT 0');
 migrate('watch_progress', "TEXT DEFAULT ''");
 
+// ── 用户自定义清单 ──
+db.exec(`
+  CREATE TABLE IF NOT EXISTS lists (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS list_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    list_id INTEGER NOT NULL REFERENCES lists(id) ON DELETE CASCADE,
+    item_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    watch_progress TEXT DEFAULT '',
+    added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(list_id, item_id)
+  )
+`);
+
 // unique index on douban_id (skip if already exists)
 try {
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_items_douban_id ON items(douban_id)');

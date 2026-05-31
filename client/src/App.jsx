@@ -4,6 +4,8 @@ import AddEdit from './pages/AddEdit';
 import Search from './pages/Search';
 import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
+import Lists from './pages/Lists';
+import ListDetail from './pages/ListDetail';
 import './App.css';
 
 // v2 — 用户向电影网站
@@ -14,7 +16,8 @@ export default function App() {
         <h1 className="logo">🎬 MovieTracker</h1>
         <div className="nav-links">
           <NavLink to="/search">🔍 搜索</NavLink>
-          <NavLink to="/">清单</NavLink>
+          <NavLink to="/">🎬 电影</NavLink>
+          <NavLink to="/lists">📋 清单</NavLink>
           <NavLink to="/analytics">全站分析</NavLink>
           <NavLink to="/profile">👤 我的</NavLink>
           <NavLink to="/add" className="nav-secondary">+ 添加</NavLink>
@@ -24,6 +27,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<List />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/lists" element={<Lists />} />
+          <Route path="/lists/:id" element={<ListDetail />} />
           <Route path="/add" element={<AddEdit />} />
           <Route path="/edit/:id" element={<AddEdit />} />
           <Route path="/analytics" element={<Analytics />} />

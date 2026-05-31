@@ -14,6 +14,16 @@ export const toggleWatched = (id, watched) => api.patch(`/items/${id}/watched`, 
 export const setProgress = (id, progress) => api.patch(`/items/${id}/progress`, { progress }).then(r => r.data);
 export const fetchPersonalAnalytics = () => api.get('/analytics/personal/all').then(r => r.data);
 
+// ── 自定义清单 ──
+export const fetchLists = () => api.get('/lists').then(r => r.data);
+export const createList = (name, description) => api.post('/lists', { name, description }).then(r => r.data);
+export const updateList = (id, name, description) => api.put(`/lists/${id}`, { name, description }).then(r => r.data);
+export const deleteList = (id) => api.delete(`/lists/${id}`).then(r => r.data);
+export const fetchListItems = (listId) => api.get(`/lists/${listId}/items`).then(r => r.data);
+export const addToList = (listId, itemId) => api.post(`/lists/${listId}/items`, { item_id: itemId }).then(r => r.data);
+export const removeFromList = (listId, itemId) => api.delete(`/lists/${listId}/items/${itemId}`).then(r => r.data);
+export const updateListItemProgress = (listId, itemId, progress) => api.patch(`/lists/${listId}/items/${itemId}/progress`, { progress }).then(r => r.data);
+
 // 豆瓣搜索
 export const searchItems = (q) => api.get('/items/search', { params: { q } }).then(r => r.data);
 export const fetchItemRanking = (id) => api.get(`/items/${id}/ranking`).then(r => r.data);
