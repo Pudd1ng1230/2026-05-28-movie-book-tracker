@@ -109,7 +109,7 @@ movie-book-tracker/
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/api/analytics/all` | 全站分析（6 图表 + 概览） |
-| GET | `/api/analytics/personal/all` | 🆕 个人分析（仅已标记/打分/写评的电影） |
+| GET | `/api/analytics/personal/all` | 🆕 个人分析（含评分分布/分类/导演/进度饼图/vs豆瓣散点/年份/地区/演员/评分档位） |
 | GET | `/api/analytics/rating-distribution` | 评分分布 |
 | GET | `/api/analytics/avg-by-category` | 分类平均分（按 "/" 拆分聚合） |
 | GET | `/api/analytics/avg-by-director` | 导演平均分 Top10（按 ", " 拆分聚合） |
@@ -117,6 +117,14 @@ movie-book-tracker/
 | GET | `/api/analytics/timeline` | 月度观看量 |
 | GET | `/api/analytics/tag-preference` | 标签偏好（雷达图数据） |
 | GET | `/api/analytics/summary` | 概览统计 |
+
+**个人分析额外字段**（`/personal/all`）：
+- `progressDistribution` — 观看进度饼图数据（想看/在看/已看）
+- `userVsDouban` — 我的评分 vs 豆瓣评分散点数据
+- `yearDistribution` — 观影年份分布柱状图
+- `regionDistribution` — 地区分布（拆分 "/"）
+- `actorPreference` — 演员频次 Top15（拆分 ", "）
+- `ratingTiers` — 评分档位：`{ high: ≥8, mid: 5-7, low: ≤4 }`
 
 ---
 
@@ -247,9 +255,13 @@ cd server && node scraper.js    # 首次约 30 分钟爬 ~3000 部
 5. **多值字段拆分**：`analytics.js` 新增 `splitAggregate()` 工具函数，category 按 `/` 拆分、director 按 `, ` 拆分、tags 按 `/` 拆分后独立聚合计算平均分
 6. **README.md**：重写为用户向电影网站定位
 7. **测试数据**：为 100 部电影写入模拟用户数据（评分/影评/进度/已看）
-8. **🔧 性能优化（解决卡顿）**：
+8. **📊 个人分析增强**：
+   - 新增后端指标：`progressDistribution`（进度饼图）、`userVsDouban`（评分散点图）、`yearDistribution`（年份分布）、`regionDistribution`（地区分布）、`actorPreference`（演员频次 Top15）、`ratingTiers`（高/中/低分档位）
+   - Profile.jsx 新增 6 个图表：进度饼图、我的 vs 豆瓣散点图、年份柱状图、地区柱状图、演员横向条形图
+   - 概览卡片新增高分/中等/低分三档统计
+10. **🔧 性能优化（解决卡顿）**：
    - 后端分页：`GET /api/items` 返回 `{ items, total }`，支持 `limit`/`offset`
-   - List.jsx：每次只加载 50 条，「加载更多」按钮按需追加；海报 `loading="lazy"`；乐观更新（操作后不改全量刷新）
+   - List.jsx：每次只加载 50 条，「加载更多」按钮按需追加；海报 `loading="lazy"`；乐观更新（操作后不重新全量刷新）
    - Profile.jsx：统计卡片可点击跳转到清单页（带筛选参数）；影评列表改用 `has_review=1` 专用查询替代全量拉取
    - Search.jsx：`useCallback` 稳定 `doSearch` 引用，修复 useEffect 闭包陷阱
    - 所有 `<img>` 添加 `loading="lazy"` 属性

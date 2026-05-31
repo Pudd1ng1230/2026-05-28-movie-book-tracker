@@ -238,6 +238,75 @@ router.get('/personal/all', (req, res) => {
   const wantWatch = db.prepare(`SELECT COUNT(*) AS count FROM items WHERE watch_progress = '想看'`).get();
   const watching = db.prepare(`SELECT COUNT(*) AS count FROM items WHERE watch_progress = '在看'`).get();
 
+  // 🆕 观看进度分布
+  const progressDistribution = db.prepare(`
+    SELECT watch_progress AS name, COUNT(*) AS value
+    FROM items WHERE ${PERSONAL_WHERE} AND watch_progress != ''
+    GROUP BY watch_progress
+  `).all();
+  // 补充已看但未设进度的
+  const watchedNoProgress = db.prepare(
+    `SELECT COUNT(*) AS cnt FROM items WHERE watched = 1 AND watch_progress = ''`
+  ).get().cnt;
+  if (watchedNoProgress > 0) {
+    progressDistribution.push({ name: '已看(无进度)', value: watchedNoProgress });
+  }
+
+  // 🆕 我的评分 vs 豆瓣评分（散点图数据）
+  const userVsDouban = db.prepare(`
+    SELECT name, rating AS user_rating, douban_rating
+    FROM items WHERE rating IS NOT NULL AND douban_rating IS NOT NULL AND ${PERSONAL_WHERE}
+    LIMIT 100
+  `).all();
+
+  // 🆕 观影年份分布
+  const yearDistribution = db.prepare(`
+    SELECT year, COUNT(*) AS count
+    FROM items WHERE year IS NOT NULL AND ${PERSONAL_WHERE}
+    GROUP BY year ORDER BY year
+  `).all();
+
+  // 🆕 地区分布（拆分 "/"）
+  const regionRows = db.prepare(
+    `SELECT regions FROM items WHERE regions != '' AND ${PERSONAL_WHERE}`
+  ).all();
+  const regionCount = {};
+  regionRows.forEach(row => {
+    (row.regions || '').split('/').map(s => s.trim()).filter(Boolean).forEach(r => {
+      regionCount[r] = (regionCount[r] || 0) + 1;
+    });
+  });
+  const regionDistribution = Object.entries(regionCount)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+
+  // 🆕 演员偏好 Top 15
+  const actorRows = db.prepare(
+    `SELECT actors, rating FROM items WHERE actors != '' AND rating IS NOT NULL AND ${PERSONAL_WHERE}`
+  ).all();
+  const actorMap = {};
+  actorRows.forEach(row => {
+    (row.actors || '').split(',').map(s => s.trim()).filter(Boolean).forEach(a => {
+      if (!actorMap[a]) actorMap[a] = [];
+      actorMap[a].push(row.rating);
+    });
+  });
+  const actorPreference = Object.entries(actorMap)
+    .map(([name, scores]) => ({
+      name,
+      avg_rating: Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10,
+      count: scores.length,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 15);
+
+  // 🆕 评分档位统计（高/中/低）
+  const ratingTiers = {
+    high: db.prepare(`SELECT COUNT(*) AS cnt FROM items WHERE rating >= 8 AND ${PERSONAL_WHERE}`).get().cnt,
+    mid: db.prepare(`SELECT COUNT(*) AS cnt FROM items WHERE rating >= 5 AND rating <= 7 AND ${PERSONAL_WHERE}`).get().cnt,
+    low: db.prepare(`SELECT COUNT(*) AS cnt FROM items WHERE rating >= 1 AND rating <= 4 AND ${PERSONAL_WHERE}`).get().cnt,
+  };
+
   res.json({
     ratingDistribution: ratingDist,
     avgByCategory,
@@ -245,6 +314,12 @@ router.get('/personal/all', (req, res) => {
     avgByYear,
     timeline,
     tagPreference,
+    progressDistribution,
+    userVsDouban,
+    yearDistribution,
+    regionDistribution,
+    actorPreference,
+    ratingTiers,
     summary: {
       total: total.count,
       watched: watched.count,
