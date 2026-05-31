@@ -302,7 +302,8 @@ body {
    用户操作区
    ═══════════════════════════════════════ */
 .user-actions {
-  display: flex; align-items: center; gap: 8px; margin-top: 6px;
+  display: flex; align-items: center; gap: 6px; margin-top: 6px;
+  flex-wrap: wrap;
 }
 .user-actions .watched-btn {
   font-size: 12px; padding: 3px 10px; border-radius: 12px; cursor: pointer;
@@ -324,7 +325,8 @@ body {
 .progress-select.watched-tag { background: rgba(145, 204, 117, 0.1); border-color: rgba(145, 204, 117, 0.3); color: #91cc75; }
 
 .quick-rate {
-  display: flex; align-items: center; gap: 2px; font-size: 13px;
+  display: flex; align-items: center; gap: 1px; font-size: 11px;
+  flex-shrink: 0;
 }
 .quick-rate .star {
   cursor: pointer; color: rgba(255,255,255,0.1); transition: color 0.1s;
