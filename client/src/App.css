@@ -6,7 +6,7 @@
 :root {
   /* 基础色 — 暗色系统 */
   --bg: #1c1c28;
-  --surface: rgba(18, 18, 22, 0.75);
+  --surface: rgba(28, 28, 40, 0.75);
   --border: rgba(255, 255, 255, 0.06);
   --border-light: rgba(255, 255, 255, 0.04);
   --text: #c8c8cc;
@@ -51,7 +51,7 @@ body {
   position: sticky; top: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 20px; margin: 0 -24px 28px;
-  background: rgba(18, 18, 22, 0.82);
+  background: rgba(28, 28, 40, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
