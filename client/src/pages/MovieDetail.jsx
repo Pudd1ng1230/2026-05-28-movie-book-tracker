@@ -130,7 +130,7 @@ export default function MovieDetail() {
       {/* 标签 */}
       <div className="detail-tags">
         {categories.map(c => <span key={c} className="tag">{c}</span>)}
-        {(movie.tags && JSON.parse(movie.tags || '[]')).map(t => (
+        {(Array.isArray(movie.tags) ? movie.tags : []).map(t => (
           <span key={t} className="tag">{t}</span>
         ))}
       </div>

@@ -556,10 +556,13 @@ body {
 }
 .item-check {
   display: flex; align-items: flex-start; padding: 10px 0 0 10px;
+  opacity: 0; transition: opacity 0.2s;
 }
+.item-card:hover .item-check { opacity: 1; }
 .item-check input[type="checkbox"] {
   width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary);
 }
+.item-card.selected .item-check { opacity: 1; }
 .item-card.selected {
   border-color: var(--primary-dim);
   box-shadow: 0 0 0 1px rgba(77,184,200,0.15);
