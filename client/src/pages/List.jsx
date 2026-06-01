@@ -20,6 +20,8 @@ export default function List() {
   const [ratingMin, setRatingMin] = useState(searchParams.get('rating_min') || '');
   const [ratingMax, setRatingMax] = useState(searchParams.get('rating_max') || '');
   const [hasInteraction, setHasInteraction] = useState(searchParams.get('has_interaction') || '');
+  const [year, setYear] = useState(searchParams.get('year') || '');
+  const [category, setCategory] = useState(searchParams.get('category') || '');
   const [offset, setOffset] = useState(0);
   const [lists, setLists] = useState([]);
 
@@ -36,6 +38,8 @@ export default function List() {
     if (ratingMin) params.rating_min = ratingMin;
     if (ratingMax) params.rating_max = ratingMax;
     if (hasInteraction) params.has_interaction = hasInteraction;
+    if (year) params.year = year;
+    if (category) params.category = category;
     const data = await fetchItems(params);
     setItems(append ? [...items, ...data.items] : data.items);
     setTotal(data.total);
@@ -54,12 +58,14 @@ export default function List() {
     if (progress) params.progress = progress;
     if (ratingMin) params.rating_min = ratingMin;
     if (ratingMax) params.rating_max = ratingMax;
+    if (year) params.year = year;
+    if (category) params.category = category;
     if (hasInteraction) params.has_interaction = hasInteraction;
     fetchItems(params).then(data => {
       setItems(data.items);
       setTotal(data.total);
     });
-  }, [type, sort, watched, progress, ratingMin, ratingMax, hasInteraction]);
+  }, [type, sort, watched, progress, ratingMin, ratingMax, hasInteraction, year, category]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -101,6 +107,8 @@ export default function List() {
     if (ratingMin) params.rating_min = ratingMin;
     if (ratingMax) params.rating_max = ratingMax;
     if (hasInteraction) params.has_interaction = hasInteraction;
+    if (year) params.year = year;
+    if (category) params.category = category;
     fetchItems(params).then(data => {
       setItems(prev => [...prev, ...data.items]);
       setTotal(data.total);
@@ -120,15 +128,28 @@ export default function List() {
           <option value="tv">剧集</option>
           <option value="book">书籍</option>
         </select>
-        <select value={watched} onChange={e => setWatched(e.target.value)}>
-          <option value="">全部状态</option>
-          <option value="1">已看</option>
-          <option value="0">未看</option>
+        <input placeholder="年份(如 2023)" value={year} onChange={e => setYear(e.target.value)} style={{width:110}} />
+        <select value={category} onChange={e => setCategory(e.target.value)}>
+          <option value="">全部分类</option>
+          <option value="剧情">剧情</option>
+          <option value="喜剧">喜剧</option>
+          <option value="动作">动作</option>
+          <option value="爱情">爱情</option>
+          <option value="科幻">科幻</option>
+          <option value="悬疑">悬疑</option>
+          <option value="动画">动画</option>
+          <option value="纪录片">纪录片</option>
+          <option value="恐怖">恐怖</option>
+          <option value="犯罪">犯罪</option>
+          <option value="奇幻">奇幻</option>
+          <option value="战争">战争</option>
         </select>
         <select value={sort} onChange={e => setSort(e.target.value)}>
           <option value="">默认排序</option>
-          <option value="rating_desc">评分从高到低</option>
-          <option value="rating_asc">评分从低到高</option>
+          <option value="user_rating_desc">我的评分 ↓</option>
+          <option value="user_rating_asc">我的评分 ↑</option>
+          <option value="douban_rating_desc">豆瓣评分 ↓</option>
+          <option value="douban_rating_asc">豆瓣评分 ↑</option>
           <option value="date_desc">日期从新到旧</option>
           <option value="date_asc">日期从旧到新</option>
         </select>
@@ -151,10 +172,16 @@ export default function List() {
               {item.director && <span className="director">{item.director}</span>}
               <div className="item-meta">
                 <span className="type-badge">{typeLabels[item.type]}</span>
-                {item.douban_rating && (
+                {item.douban_rating ? (
                   <span className="rating" style={{fontSize:12,color:'#f5a623'}}>豆瓣 ★{item.douban_rating}</span>
+                ) : (
+                  <span className="rating" style={{fontSize:12,color:'var(--text-muted)'}}>暂无豆瓣评分</span>
                 )}
-                {item.rating && <span className="rating">我的 ★{item.rating}</span>}
+                {item.rating ? (
+                  <span className="rating">我的 ★{item.rating}</span>
+                ) : (
+                  <span className="rating" style={{fontSize:12,color:'var(--text-muted)'}}>未打分</span>
+                )}
               </div>
               <div className="user-actions">
                 <select

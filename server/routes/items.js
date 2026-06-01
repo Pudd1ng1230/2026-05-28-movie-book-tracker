@@ -94,12 +94,13 @@ router.get('/:id/ranking', (req, res) => {
 
 // List all items with optional filters + pagination
 router.get('/', (req, res) => {
-  const { type, category, search, sort, watched, has_review, progress, rating_min, rating_max, has_interaction, limit, offset } = req.query;
+  const { type, category, year, search, sort, watched, has_review, progress, rating_min, rating_max, has_interaction, limit, offset } = req.query;
   let where = 'WHERE 1=1';
   const params = [];
 
   if (type) { where += ' AND type = ?'; params.push(type); }
-  if (category) { where += ' AND category = ?'; params.push(category); }
+  if (category) { where += ' AND category LIKE ?'; params.push(`%${category}%`); }
+  if (year) { where += ' AND year = ?'; params.push(Number(year)); }
   if (search) { where += ' AND name LIKE ?'; params.push(`%${search}%`); }
   if (watched !== undefined) { where += ' AND watched = ?'; params.push(watched === '1' ? 1 : 0); }
   if (has_review === '1') { where += " AND review != ''"; }
@@ -109,8 +110,10 @@ router.get('/', (req, res) => {
   if (has_interaction === '1') { where += " AND (watched = 1 OR rating IS NOT NULL OR review != '')"; }
 
   let orderBy = ' ORDER BY created_at DESC';
-  if (sort === 'rating_desc') orderBy = ' ORDER BY rating DESC';
-  else if (sort === 'rating_asc') orderBy = ' ORDER BY rating ASC';
+  if (sort === 'user_rating_desc') orderBy = ' ORDER BY rating DESC';
+  else if (sort === 'user_rating_asc') orderBy = ' ORDER BY rating ASC';
+  else if (sort === 'douban_rating_desc') orderBy = ' ORDER BY douban_rating DESC';
+  else if (sort === 'douban_rating_asc') orderBy = ' ORDER BY douban_rating ASC';
   else if (sort === 'date_desc') orderBy = ' ORDER BY date DESC';
   else if (sort === 'date_asc') orderBy = ' ORDER BY date ASC';
 
