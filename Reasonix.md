@@ -272,6 +272,7 @@ cd server && node scraper.js    # 首次约 30 分钟爬 ~3000 部
 5. **Profile 卡片**：8 张全部可点击，筛选参数完善
 6. **图片代理**：`/api/proxy-image` 绕过豆瓣防盗链，Poster 组件自动 fallback
 7. **筛选增强**：年份精确匹配 + 分类 LIKE 模糊（12 种）+ 评分双体系排序
+8. **代码清理**：移除无用的类型下拉、死代码 `toggleWatched`、重复 `buildParams` 逻辑
 
 ### 2026-05-31（早期）
 1. 数据库迁移：`watched` + `watch_progress` 字段

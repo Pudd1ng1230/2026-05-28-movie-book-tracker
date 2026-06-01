@@ -1,82 +1,54 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { fetchItems, deleteItem, setProgress, updateItem, fetchLists, addToList } from '../api';
 import Poster from '../components/Poster';
 
-const typeLabels = { movie: '电影', tv: '剧集', book: '书籍' };
 const PROGRESS_OPTIONS = ['', '想看', '在看', '已看'];
 const PAGE_SIZE = 50;
 
 export default function List() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [type, setType] = useState(searchParams.get('type') || '');
-  const [search, setSearch] = useState(searchParams.get('search') || '');
-  const [sort, setSort] = useState(searchParams.get('sort') || '');
-  const [watched, setWatched] = useState(searchParams.get('watched') || '');
-  const [progress, setProgressFilter] = useState(searchParams.get('progress') || '');
-  const [ratingMin, setRatingMin] = useState(searchParams.get('rating_min') || '');
-  const [ratingMax, setRatingMax] = useState(searchParams.get('rating_max') || '');
-  const [hasInteraction, setHasInteraction] = useState(searchParams.get('has_interaction') || '');
-  const [year, setYear] = useState(searchParams.get('year') || '');
-  const [category, setCategory] = useState(searchParams.get('category') || '');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('');
+  const [progress, setProgressFilter] = useState('');
+  const [ratingMin, setRatingMin] = useState('');
+  const [ratingMax, setRatingMax] = useState('');
+  const [hasInteraction, setHasInteraction] = useState('');
+  const [year, setYear] = useState('');
+  const [category, setCategory] = useState('');
   const [offset, setOffset] = useState(0);
   const [lists, setLists] = useState([]);
 
   useEffect(() => { fetchLists().then(setLists).catch(() => {}); }, []);
 
-  const load = useCallback(async (append = false) => {
-    setLoading(true);
-    const params = { limit: PAGE_SIZE, offset: append ? offset + PAGE_SIZE : 0 };
-    if (type) params.type = type;
-    if (search) params.search = search;
-    if (sort) params.sort = sort;
-    if (watched) params.watched = watched;
-    if (progress) params.progress = progress;
-    if (ratingMin) params.rating_min = ratingMin;
-    if (ratingMax) params.rating_max = ratingMax;
-    if (hasInteraction) params.has_interaction = hasInteraction;
-    if (year) params.year = year;
-    if (category) params.category = category;
-    const data = await fetchItems(params);
-    setItems(append ? [...items, ...data.items] : data.items);
-    setTotal(data.total);
-    setOffset(append ? offset + PAGE_SIZE : 0);
-    setLoading(false);
-  }, [type, search, sort, watched, offset, items]);
+  const buildParams = (overrides = {}) => {
+    const p = { limit: PAGE_SIZE, offset: 0, ...overrides };
+    if (search) p.search = search;
+    if (sort) p.sort = sort;
+    if (progress) p.progress = progress;
+    if (ratingMin) p.rating_min = ratingMin;
+    if (ratingMax) p.rating_max = ratingMax;
+    if (hasInteraction) p.has_interaction = hasInteraction;
+    if (year) p.year = year;
+    if (category) p.category = category;
+    return p;
+  };
 
-  // 初次加载 / 筛选变化
+  // 加载 / 筛选变化
   useEffect(() => {
     setOffset(0);
-    const params = { limit: PAGE_SIZE, offset: 0 };
-    if (type) params.type = type;
-    if (search) params.search = search;
-    if (sort) params.sort = sort;
-    if (watched) params.watched = watched;
-    if (progress) params.progress = progress;
-    if (ratingMin) params.rating_min = ratingMin;
-    if (ratingMax) params.rating_max = ratingMax;
-    if (year) params.year = year;
-    if (category) params.category = category;
-    if (hasInteraction) params.has_interaction = hasInteraction;
-    fetchItems(params).then(data => {
+    fetchItems(buildParams()).then(data => {
       setItems(data.items);
       setTotal(data.total);
     });
-  }, [type, sort, watched, progress, ratingMin, ratingMax, hasInteraction, year, category]);
+  }, [sort, progress, ratingMin, ratingMax, hasInteraction, year, category]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     setOffset(0);
-    const params = {};
-    if (type) params.type = type;
-    if (search) params.search = search;
-    if (sort) params.sort = sort;
-    if (watched) params.watched = watched;
-    setSearchParams(params);
-    fetchItems({ ...params, limit: PAGE_SIZE, offset: 0 }).then(data => {
+    fetchItems(buildParams()).then(data => {
       setItems(data.items);
       setTotal(data.total);
     });
@@ -102,14 +74,7 @@ export default function List() {
 
   const loadMore = () => {
     const newOffset = offset + PAGE_SIZE;
-    const params = { type, search, sort, watched, limit: PAGE_SIZE, offset: newOffset };
-    if (progress) params.progress = progress;
-    if (ratingMin) params.rating_min = ratingMin;
-    if (ratingMax) params.rating_max = ratingMax;
-    if (hasInteraction) params.has_interaction = hasInteraction;
-    if (year) params.year = year;
-    if (category) params.category = category;
-    fetchItems(params).then(data => {
+    fetchItems(buildParams({ offset: newOffset })).then(data => {
       setItems(prev => [...prev, ...data.items]);
       setTotal(data.total);
       setOffset(newOffset);
@@ -122,27 +87,15 @@ export default function List() {
     <div>
       <form className="filters" onSubmit={handleSearch}>
         <input placeholder="搜索名称..." value={search} onChange={e => setSearch(e.target.value)} />
-        <select value={type} onChange={e => setType(e.target.value)}>
-          <option value="">全部类型</option>
-          <option value="movie">电影</option>
-          <option value="tv">剧集</option>
-          <option value="book">书籍</option>
-        </select>
         <input placeholder="年份(如 2023)" value={year} onChange={e => setYear(e.target.value)} style={{width:110}} />
         <select value={category} onChange={e => setCategory(e.target.value)}>
           <option value="">全部分类</option>
-          <option value="剧情">剧情</option>
-          <option value="喜剧">喜剧</option>
-          <option value="动作">动作</option>
-          <option value="爱情">爱情</option>
-          <option value="科幻">科幻</option>
-          <option value="悬疑">悬疑</option>
-          <option value="动画">动画</option>
-          <option value="纪录片">纪录片</option>
-          <option value="恐怖">恐怖</option>
-          <option value="犯罪">犯罪</option>
-          <option value="奇幻">奇幻</option>
-          <option value="战争">战争</option>
+          <option value="剧情">剧情</option><option value="喜剧">喜剧</option>
+          <option value="动作">动作</option><option value="爱情">爱情</option>
+          <option value="科幻">科幻</option><option value="悬疑">悬疑</option>
+          <option value="动画">动画</option><option value="纪录片">纪录片</option>
+          <option value="恐怖">恐怖</option><option value="犯罪">犯罪</option>
+          <option value="奇幻">奇幻</option><option value="战争">战争</option>
         </select>
         <select value={sort} onChange={e => setSort(e.target.value)}>
           <option value="">默认排序</option>
@@ -156,7 +109,7 @@ export default function List() {
         <button type="submit">搜索</button>
       </form>
 
-      <p style={{color:'var(--text-light)',fontSize:13,marginBottom:12}}>
+      <p style={{color:'var(--text-muted)',fontSize:13,marginBottom:12}}>
         共 {total} 条，已加载 {items.length} 条
       </p>
 
@@ -171,7 +124,7 @@ export default function List() {
               {item.year && <span className="year">{item.year}</span>}
               {item.director && <span className="director">{item.director}</span>}
               <div className="item-meta">
-                <span className="type-badge">{typeLabels[item.type]}</span>
+                <span className="type-badge">电影</span>
                 {item.douban_rating ? (
                   <span className="rating" style={{fontSize:12,color:'#f5a623'}}>豆瓣 ★{item.douban_rating}</span>
                 ) : (

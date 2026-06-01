@@ -10,7 +10,6 @@ export const deleteItem = (id) => api.delete(`/items/${id}`).then(r => r.data);
 export const fetchAnalytics = () => api.get('/analytics/all').then(r => r.data);
 
 // 用户操作
-export const toggleWatched = (id, watched) => api.patch(`/items/${id}/watched`, { watched }).then(r => r.data);
 export const setProgress = (id, progress) => api.patch(`/items/${id}/progress`, { progress }).then(r => r.data);
 export const fetchPersonalAnalytics = () => api.get('/analytics/personal/all').then(r => r.data);
 
