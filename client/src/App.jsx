@@ -6,6 +6,7 @@ import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
 import Lists from './pages/Lists';
 import ListDetail from './pages/ListDetail';
+import MovieDetail from './pages/MovieDetail';
 import './App.css';
 
 // v2 — 用户向电影网站
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/add" element={<AddEdit />} />
           <Route path="/edit/:id" element={<AddEdit />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/movie/:id" element={<MovieDetail />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>

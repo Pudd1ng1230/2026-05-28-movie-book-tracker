@@ -212,6 +212,21 @@ router.patch('/:id/progress', (req, res) => {
   res.json({ ok: true, progress: val });
 });
 
+// ── 批量操作：设置进度 ──
+router.patch('/batch/progress', (req, res) => {
+  const { ids, progress } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: '请提供 ids 数组' });
+  }
+  const val = progress || '';
+  const watchedVal = val === '已看' ? 1 : 0;
+  const placeholders = ids.map(() => '?').join(',');
+  // 批量更新
+  db.prepare(`UPDATE items SET watch_progress = ?, watched = ? WHERE id IN (${placeholders})`).run(val, watchedVal, ...ids);
+  db.prepare(`UPDATE list_items SET watch_progress = ? WHERE item_id IN (${placeholders})`).run(val, ...ids);
+  res.json({ ok: true, count: ids.length });
+});
+
 // Delete item
 router.delete('/:id', (req, res) => {
   const existing = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { searchItems, fetchItemRanking, setProgress, updateItem, fetchLists, addToList } from '../api';
 import Poster from '../components/Poster';
 
@@ -127,7 +128,7 @@ export default function Search() {
                     <Poster src={movie.poster} alt={movie.name} style={{width:'100%',height:'100%',objectFit:'cover'}} />
                   </div>
                   <div className="search-card-info">
-                    <h3>{movie.name}</h3>
+                    <Link to={`/movie/${movie.id}`} style={{textDecoration:'none',color:'inherit'}}><h3>{movie.name}</h3></Link>
                     <div className="search-card-meta">
                       {movie.year && <span>{movie.year}</span>}
                       {movie.director && <span>导演: {movie.director}</span>}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchItems, deleteItem, setProgress, updateItem, fetchLists, addToList } from '../api';
+import { fetchItems, deleteItem, setProgress, updateItem, fetchLists, addToList, batchProgress, batchAddToList } from '../api';
 import Poster from '../components/Poster';
 
 const PROGRESS_OPTIONS = ['', '想看', '在看', '已看'];
@@ -20,6 +20,34 @@ export default function List() {
   const [category, setCategory] = useState('');
   const [offset, setOffset] = useState(0);
   const [lists, setLists] = useState([]);
+  const [selected, setSelected] = useState(new Set());
+
+  const toggleSelect = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selected.size === items.length) { setSelected(new Set()); return; }
+    setSelected(new Set(items.map(i => i.id)));
+  };
+
+  const handleBatchProgress = async (progress) => {
+    const ids = [...selected];
+    await batchProgress(ids, progress);
+    setItems(prev => prev.map(i => ids.includes(i.id) ? { ...i, watch_progress: progress, watched: progress === '已看' ? 1 : 0 } : i));
+    setSelected(new Set());
+  };
+
+  const handleBatchAddToList = async (listId) => {
+    const ids = [...selected];
+    await batchAddToList(listId, ids);
+    setSelected(new Set());
+    alert('已添加到清单！');
+  };
 
   useEffect(() => { fetchLists().then(setLists).catch(() => {}); }, []);
 
@@ -109,18 +137,46 @@ export default function List() {
         <button type="submit">搜索</button>
       </form>
 
-      <p style={{color:'var(--text-muted)',fontSize:13,marginBottom:12}}>
-        共 {total} 条，已加载 {items.length} 条
-      </p>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+        <p style={{color:'var(--text-muted)',fontSize:13,margin:0,flex:1}}>
+          共 {total} 条，已加载 {items.length} 条 {selected.size > 0 && `| 已选 ${selected.size} 项`}
+        </p>
+        <button className="btn-sm" onClick={selectAll}>
+          {selected.size === items.length && items.length > 0 ? '取消全选' : '全选'}
+        </button>
+      </div>
+
+      {selected.size > 0 && (
+        <div className="batch-bar">
+          <span>已选 {selected.size} 项</span>
+          <select className="progress-select" value="" onChange={e => { if (e.target.value) handleBatchProgress(e.target.value); }}>
+            <option value="">批量设置状态...</option>
+            <option value="想看">📌 想看</option>
+            <option value="在看">👀 在看</option>
+            <option value="已看">✅ 已看</option>
+            <option value="">清除状态</option>
+          </select>
+          {lists.length > 0 && (
+            <select className="add-to-list-select" value="" onChange={e => { if (e.target.value) handleBatchAddToList(Number(e.target.value)); }}>
+              <option value="">+ 批量加到清单</option>
+              {lists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          )}
+          <button className="btn-sm" onClick={() => setSelected(new Set())}>取消选择</button>
+        </div>
+      )}
 
       <div className="item-grid">
         {items.map(item => (
-          <div key={item.id} className="item-card">
+          <div key={item.id} className={`item-card ${selected.has(item.id) ? 'selected' : ''}`}>
+            <div className="item-check">
+              <input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleSelect(item.id)} />
+            </div>
             <div className="item-poster">
               <Poster src={item.poster} alt={item.name} style={{width:'100%',height:'100%',objectFit:'cover'}} />
             </div>
             <div className="item-info">
-              <h3>{item.name}</h3>
+              <Link to={`/movie/${item.id}`} style={{textDecoration:'none',color:'inherit'}}><h3>{item.name}</h3></Link>
               {item.year && <span className="year">{item.year}</span>}
               {item.director && <span className="director">{item.director}</span>}
               <div className="item-meta">

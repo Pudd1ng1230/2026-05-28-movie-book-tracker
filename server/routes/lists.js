@@ -69,6 +69,25 @@ router.post('/:id/items', (req, res) => {
   res.status(201).json({ ok: true });
 });
 
+// 批量添加电影到清单
+router.post('/:id/items/batch', (req, res) => {
+  const { item_ids } = req.body;
+  if (!item_ids || !Array.isArray(item_ids) || item_ids.length === 0) {
+    return res.status(400).json({ error: '请提供 item_ids 数组' });
+  }
+  const list = db.prepare('SELECT id FROM lists WHERE id = ?').get(req.params.id);
+  if (!list) return res.status(404).json({ error: '清单不存在' });
+  let added = 0;
+  const insert = db.prepare('INSERT OR IGNORE INTO list_items (list_id, item_id, watch_progress) VALUES (?, ?, ?)');
+  for (const itemId of item_ids) {
+    const item = db.prepare('SELECT watch_progress FROM items WHERE id = ?').get(itemId);
+    if (!item) continue;
+    const result = insert.run(req.params.id, itemId, item.watch_progress || '');
+    if (result.changes > 0) added++;
+  }
+  res.json({ ok: true, added });
+});
+
 // 从清单移除电影
 router.delete('/:id/items/:itemId', (req, res) => {
   db.prepare('DELETE FROM list_items WHERE list_id = ? AND item_id = ?').run(req.params.id, req.params.itemId);

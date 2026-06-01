@@ -22,6 +22,8 @@ export const fetchListItems = (listId) => api.get(`/lists/${listId}/items`).then
 export const addToList = (listId, itemId) => api.post(`/lists/${listId}/items`, { item_id: itemId }).then(r => r.data);
 export const removeFromList = (listId, itemId) => api.delete(`/lists/${listId}/items/${itemId}`).then(r => r.data);
 export const updateListItemProgress = (listId, itemId, progress) => api.patch(`/lists/${listId}/items/${itemId}/progress`, { progress }).then(r => r.data);
+export const batchProgress = (ids, progress) => api.patch('/items/batch/progress', { ids, progress }).then(r => r.data);
+export const batchAddToList = (listId, itemIds) => api.post(`/lists/${listId}/items/batch`, { item_ids: itemIds }).then(r => r.data);
 
 // 豆瓣搜索
 export const searchItems = (q) => api.get('/items/search', { params: { q } }).then(r => r.data);
