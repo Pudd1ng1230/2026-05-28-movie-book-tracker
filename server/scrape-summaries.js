@@ -6,7 +6,10 @@
  * 用法: node server/scrape-summaries.js
  */
 
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
+
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -44,11 +47,17 @@ async function login() {
   await page.goto('https://www.douban.com/', { waitUntil: 'networkidle2' });
 
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('👉 请在弹出的浏览器中登录豆瓣（60 秒时限）');
+  console.log('👉 请在弹出的浏览器中登录豆瓣（120 秒时限）');
+  console.log('👉 登录后确认看到豆瓣首页再等几秒');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-  // 等 60 秒让你登录
-  await sleep(60000);
+  // 等 120 秒确保充分登录
+  await sleep(120000);
+
+  // 访问电影页面获取 movie.douban.com 的 Cookie
+  console.log('获取电影子域名 Cookie...');
+  await page.goto('https://movie.douban.com/', { waitUntil: 'networkidle2', timeout: 15000 }).catch(() => {});
+  await sleep(3000);
 
   const cookies = await page.cookies();
   await browser.close();
