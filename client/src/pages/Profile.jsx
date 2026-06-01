@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as echarts from 'echarts';
 import { fetchPersonalAnalytics, fetchItems } from '../api';
+import Poster from '../components/Poster';
 
 function Chart({ option }) {
   const ref = useRef(null);
@@ -281,7 +282,7 @@ export default function Profile() {
               {reviews.filter(r => r.review).map(item => (
                 <div key={item.id} className="review-item">
                   <div className="review-poster">
-                    {item.poster ? <img src={item.poster} alt={item.name} loading="lazy" /> : <span style={{fontSize:16}}>🎬</span>}
+                    <Poster src={item.poster} alt={item.name} style={{width:'100%',height:'100%',objectFit:'cover'}} />
                   </div>
                   <div className="review-body">
                     <div className="review-name">{item.name}</div>

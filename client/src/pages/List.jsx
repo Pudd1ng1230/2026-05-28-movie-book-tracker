@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { fetchItems, deleteItem, setProgress, updateItem, fetchLists, addToList } from '../api';
+import Poster from '../components/Poster';
 
 const typeLabels = { movie: '电影', tv: '剧集', book: '书籍' };
 const PROGRESS_OPTIONS = ['', '想看', '在看', '已看'];
@@ -142,11 +143,7 @@ export default function List() {
         {items.map(item => (
           <div key={item.id} className="item-card">
             <div className="item-poster">
-              {item.poster ? (
-                <img src={item.poster} alt={item.name} loading="lazy" />
-              ) : (
-                <div className="no-poster">{typeLabels[item.type] || item.type}</div>
-              )}
+              <Poster src={item.poster} alt={item.name} style={{width:'100%',height:'100%',objectFit:'cover'}} />
             </div>
             <div className="item-info">
               <h3>{item.name}</h3>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchListItems, removeFromList, updateListItemProgress, searchItems, addToList } from '../api';
+import Poster from '../components/Poster';
 
 const PROGRESS_LABELS = { '想看': '📌', '在看': '👀', '已看': '✅' };
 
@@ -124,11 +125,7 @@ export default function ListDetail() {
               {items.map(item => (
                 <tr key={item.id}>
                   <td>
-                    {item.poster ? (
-                      <img src={item.poster} alt={item.name} className="list-table-poster" loading="lazy" />
-                    ) : (
-                      <span style={{ fontSize: 24 }}>🎬</span>
-                    )}
+                    <Poster src={item.poster} alt={item.name} className="list-table-poster" />
                   </td>
                   <td className="list-table-name">{item.name}</td>
                   <td className="list-table-meta">{item.director || '-'}</td>

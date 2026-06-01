@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { searchItems, fetchItemRanking, setProgress, updateItem, fetchLists, addToList } from '../api';
+import Poster from '../components/Poster';
 
 /** 排名条目展示组件 */
 function RankBadge({ label, data }) {
@@ -123,11 +124,7 @@ export default function Search() {
                   onClick={() => toggleRanking(movie.id)}
                 >
                   <div className="search-card-poster">
-                    {movie.poster ? (
-                      <img src={movie.poster} alt={movie.name} loading="lazy" />
-                    ) : (
-                      <div className="no-poster">🎬</div>
-                    )}
+                    <Poster src={movie.poster} alt={movie.name} style={{width:'100%',height:'100%',objectFit:'cover'}} />
                   </div>
                   <div className="search-card-info">
                     <h3>{movie.name}</h3>
