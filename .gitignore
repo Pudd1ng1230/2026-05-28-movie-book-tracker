@@ -1,5 +1,6 @@
 node_modules/
 dist/
-*.db
 *.db-shm
 *.db-wal
+# data.db 是有意提交的（让部署者直接有数据）
+# *.db 不忽略以包含 data.db，其他 .db 文件一般不会出现
