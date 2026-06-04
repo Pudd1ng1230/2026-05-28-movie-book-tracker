@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { fetchItem, fetchItemRanking, setProgress, updateItem } from '../api';
 import Poster from '../components/Poster';
+import StarRating from '../components/StarRating';
 
 const PROGRESS_OPTIONS = ['', '想看', '在看', '已看'];
 
@@ -94,13 +95,8 @@ export default function MovieDetail() {
                 {movie.rating ? `★ ${movie.rating}` : '未打分'}
               </div>
               <div className="detail-rating-label">我的评分</div>
-              <div className="quick-rate" style={{marginTop:6,justifyContent:'center'}}>
-                {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                  <span key={n} className={`star ${movie.rating && n <= movie.rating ? 'active' : ''}`}
-                    onClick={() => handleRate(n)} title={`${n}分`}>
-                    {n <= 5 ? '★' : '☆'}
-                  </span>
-                ))}
+              <div style={{marginTop:6,display:'flex',justifyContent:'center'}}>
+                <StarRating rating={movie.rating} onRate={handleRate} />
               </div>
             </div>
           </div>

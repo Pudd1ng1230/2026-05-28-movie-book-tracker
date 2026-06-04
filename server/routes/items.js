@@ -163,13 +163,29 @@ router.put('/:id', (req, res) => {
   const existing = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Not found' });
 
+  // 输入校验
+  if (req.body.type !== undefined && !['movie', 'tv', 'book'].includes(req.body.type)) {
+    return res.status(400).json({ error: 'type 必须是 movie/tv/book' });
+  }
+  if (req.body.rating !== undefined) {
+    const r = Number(req.body.rating);
+    if (isNaN(r) || r < 1 || r > 10) {
+      return res.status(400).json({ error: 'rating 必须在 1-10 之间' });
+    }
+  }
+  if (req.body.year !== undefined) {
+    const y = Number(req.body.year);
+    if (req.body.year !== null && (isNaN(y) || y < 1888 || y > 2100)) {
+      return res.status(400).json({ error: 'year 格式无效' });
+    }
+  }
+
   const fields = ['name', 'type', 'category', 'director', 'year', 'rating', 'review', 'date', 'poster', 'summary'];
   const sets = [];
   const params = [];
 
   fields.forEach(f => {
     if (req.body[f] !== undefined) {
-      if (f === 'type' && !['movie', 'tv', 'book'].includes(req.body[f])) return;
       sets.push(`${f} = ?`);
       params.push(req.body[f]);
     }

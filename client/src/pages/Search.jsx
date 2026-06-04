@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { searchItems, fetchItemRanking, setProgress, updateItem, fetchLists, addToList } from '../api';
 import Poster from '../components/Poster';
+import StarRating from '../components/StarRating';
 
 /** 排名条目展示组件 */
 function RankBadge({ label, data }) {
@@ -81,12 +82,6 @@ export default function Search() {
     setResults(prev => prev.map(m => m.id === id ? { ...m, watch_progress: progress, watched: watchedVal } : m));
   };
 
-  const handleRate = async (e, movie, rating) => {
-    e.stopPropagation();
-    await updateItem(movie.id, { rating });
-    setResults(prev => prev.map(m => m.id === movie.id ? { ...m, rating } : m));
-  };
-
   // 自动搜索：输入后延迟搜索
   useEffect(() => {
     const q = query.trim();
@@ -157,17 +152,10 @@ export default function Search() {
                         <option value="在看">在看</option>
                         <option value="已看">已看</option>
                       </select>
-                      <div className="quick-rate">
-                        {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                          <span
-                            key={n}
-                            className={`star ${movie.rating && n <= movie.rating ? 'active' : ''}`}
-                            onClick={(e) => handleRate(e, movie, n)}
-                          >
-                            {n <= 5 ? '★' : '☆'}
-                          </span>
-                        ))}
-                      </div>
+                      <StarRating rating={movie.rating} onRate={async (n) => {
+                        await updateItem(movie.id, { rating: n });
+                        setResults(prev => prev.map(m => m.id === movie.id ? { ...m, rating: n } : m));
+                      }} />
                       {lists.length > 0 && (
                         <select
                           className="add-to-list-select"

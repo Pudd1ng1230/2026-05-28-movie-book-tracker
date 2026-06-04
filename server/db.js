@@ -65,9 +65,20 @@ db.exec(`
   )
 `);
 
-// unique index on douban_id (skip if already exists)
-try {
-  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_items_douban_id ON items(douban_id)');
-} catch (_) { /* index may already exist */ }
+// ── 索引（幂等：IF NOT EXISTS 保证可重复运行） ──
+const indexes = [
+  'CREATE UNIQUE INDEX IF NOT EXISTS idx_items_douban_id ON items(douban_id)',
+  'CREATE INDEX IF NOT EXISTS idx_items_type ON items(type)',
+  'CREATE INDEX IF NOT EXISTS idx_items_watched ON items(watched)',
+  'CREATE INDEX IF NOT EXISTS idx_items_douban_rating ON items(douban_rating)',
+  'CREATE INDEX IF NOT EXISTS idx_items_rating ON items(rating)',
+  'CREATE INDEX IF NOT EXISTS idx_items_year ON items(year)',
+  'CREATE INDEX IF NOT EXISTS idx_items_created_at ON items(created_at)',
+  'CREATE INDEX IF NOT EXISTS idx_list_items_list ON list_items(list_id)',
+  'CREATE INDEX IF NOT EXISTS idx_list_items_item ON list_items(item_id)',
+];
+for (const sql of indexes) {
+  try { db.exec(sql); } catch (_) { /* may already exist */ }
+}
 
 module.exports = db;

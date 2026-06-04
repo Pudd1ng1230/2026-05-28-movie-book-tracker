@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchItems, deleteItem, setProgress, updateItem, fetchLists, addToList, batchProgress, batchAddToList } from '../api';
 import Poster from '../components/Poster';
+import StarRating from '../components/StarRating';
 
 const PROGRESS_OPTIONS = ['', '想看', '在看', '已看'];
 const PAGE_SIZE = 50;
@@ -101,12 +102,14 @@ export default function List() {
   };
 
   const loadMore = () => {
+    if (loading) return;
     const newOffset = offset + PAGE_SIZE;
+    setLoading(true);
     fetchItems(buildParams({ offset: newOffset })).then(data => {
       setItems(prev => [...prev, ...data.items]);
       setTotal(data.total);
       setOffset(newOffset);
-    });
+    }).finally(() => setLoading(false));
   };
 
   const hasMore = items.length < total;
@@ -200,15 +203,7 @@ export default function List() {
                 >
                   {PROGRESS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt || '状态...'}</option>)}
                 </select>
-                <div className="quick-rate">
-                  {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                    <span key={n} className={`star ${item.rating && n <= item.rating ? 'active' : ''}`}
-                      onClick={() => handleRate(item, n)} title={`${n}分`}>
-                      {n <= 5 ? '★' : '☆'}
-                    </span>
-                  ))}
-                  {item.rating && <span className="user-rating-label">{item.rating}分</span>}
-                </div>
+                <StarRating rating={item.rating} onRate={(n) => handleRate(item, n)} showLabel />
               </div>
               {item.review && <p className="user-review-mini">💬 {item.review}</p>}
               {item.tags && item.tags.length > 0 && (

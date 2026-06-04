@@ -1,53 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as echarts from 'echarts';
 import { fetchPersonalAnalytics, fetchItems } from '../api';
 import Poster from '../components/Poster';
-
-function Chart({ option }) {
-  const ref = useRef(null);
-  const chart = useRef(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    chart.current = echarts.init(ref.current);
-    const handleResize = () => chart.current?.resize();
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.current?.dispose();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!chart.current) return;
-    // 暗色主题默认样式：所有文字设为亮色
-    const darkOption = {
-      ...option,
-      title: option.title ? {
-        ...option.title,
-        textStyle: { color: '#e4e4f0', fontSize: 14, ...(option.title.textStyle || {}) },
-      } : undefined,
-      xAxis: option.xAxis ? {
-        ...option.xAxis,
-        nameTextStyle: { color: '#9090a4', ...(option.xAxis.nameTextStyle || {}) },
-        axisLabel: { color: '#9090a4', ...(option.xAxis.axisLabel || {}) },
-      } : undefined,
-      yAxis: option.yAxis ? {
-        ...option.yAxis,
-        nameTextStyle: { color: '#9090a4', ...(option.yAxis.nameTextStyle || {}) },
-        axisLabel: { color: '#9090a4', ...(option.yAxis.axisLabel || {}) },
-      } : undefined,
-      legend: option.legend ? {
-        ...option.legend,
-        textStyle: { color: '#9090a4', ...(option.legend.textStyle || {}) },
-      } : undefined,
-    };
-    chart.current.setOption(darkOption, true);
-  }, [option]);
-
-  return <div ref={ref} style={{ width: '100%', height: 350 }} />;
-}
+import Chart from '../components/Chart';
 
 export default function Profile() {
   const navigate = useNavigate();

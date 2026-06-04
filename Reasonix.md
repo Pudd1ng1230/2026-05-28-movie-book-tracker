@@ -26,7 +26,7 @@ Agent 在**每一个**响应用户的句子末尾，**必须**加上「喵」字
 - ✅ 用户操作：**统一进度状态**（想看/在看/已看）、自主打分(1-10)、写影评
 - 📋 **自定义清单**：创建多个清单，从任意页面添加电影，清单内管理观影状态（与全局进度双向同步）
 - 📊 双维度分析看板：全站统计 + 个人观影分析
-- 🎨 **暗色主题**：午夜蓝紫灰底色（`#1c1c28`），毛玻璃导航，三强调色系统
+- 🎨 **亮色主题**：白底黑字（`#ffffff` / `#1a1a1a`），毛玻璃导航，三强调色系统
 
 ## 技术偏好
 - **端口**：前端 3000，后端 3001（不使用 Vite 默认 5173）
@@ -36,31 +36,42 @@ Agent 在**每一个**响应用户的句子末尾，**必须**加上「喵」字
 
 ---
 
-## 项目结构（v2 — 用户版）
+## 项目结构（v3 — 当前版本）
 
 ```
 movie-book-tracker/
 ├── server/
 │   ├── index.js              # Express 入口（端口 3001，keepAliveTimeout=0 防退出）
-│   ├── db.js                 # SQLite 初始化 + 自动增量迁移（PRAGMA 检测已存在列则跳过）
+│   ├── db.js                 # SQLite 初始化 + 自动迁移 + 9 个查询索引
 │   ├── scraper.js            # 豆瓣爬虫 v2（/j/search_subjects + /j/subject_abstract）
-│   ├── data.db               # SQLite 数据库（WAL 模式）
+│   ├── scrape-summaries-only.js # 简介爬虫（Puppeteer + Cookie）
+│   ├── data.db               # SQLite 数据库（WAL 模式，2243 条）
 │   └── routes/
-│       ├── items.js          # 电影 CRUD + 搜索排名 + 用户操作 API
-│       └── analytics.js      # 全站分析 + 个人分析 API（拆分多值字段聚合）
+│       ├── items.js          # 电影 CRUD + 搜索排名 + 批量操作 + 输入校验
+│       ├── analytics.js      # 全站/个人分析（7 个共享查询函数 + splitAggregate）
+│       └── lists.js          # 清单 8 端点（CRUD + 批量添加 + 双向进度同步）
 ├── client/
 │   └── src/
-│       ├── App.jsx           # 根组件：吸顶导航（毛玻璃）+ 6 条路由
-│       ├── App.css           # 全局样式：CSS 变量 + 用户操作区 + 个人主页
-│       ├── api.js            # Axios API 封装（9 个导出函数）
+│       ├── App.jsx           # 根组件：毛玻璃导航 + 9 条路由
+│       ├── App.css           # 亮色主题（CSS 变量系统，577 行）
+│       ├── api.js            # Axios 封装（16 个导出函数）
 │       ├── main.jsx          # React 入口
+│       ├── components/
+│       │   ├── Chart.jsx     # 通用 ECharts 图表容器（共享组件）
+│       │   ├── Poster.jsx    # 海报（代理防盗链 + 懒加载 + fallback）
+│       │   └── StarRating.jsx # 1-10 星评分组件（复用 3 页）
 │       └── pages/
-│           ├── Search.jsx    # 电影搜索页：自动搜索 + 排名展开 + 用户快捷操作
-│           ├── List.jsx      # 电影清单页：卡片网格 + 筛选/排序 + 用户操作（已看/进度/评分）
+│           ├── List.jsx      # 电影列表（筛选/排序/分页/批量/内联操作）
+│           ├── Search.jsx    # 搜索页（输入防抖 + 四维排名展开面板）
+│           ├── MovieDetail.jsx # 电影详情页（排名+评分+影评+演员）
 │           ├── AddEdit.jsx   # 添加/编辑表单
-│           ├── Analytics.jsx # 全站数据分析看板（ECharts 6 图 + 概览卡片 + 高分榜）
-│           └── Profile.jsx   # 🆕 个人主页：观影概览 + 个人分析图表 + 影评列表 + Tab 切换
-└── README.md                 # 用户向文档
+│           ├── Analytics.jsx # 全站分析看板（6 图 + 概览 + 高分榜）
+│           ├── Profile.jsx   # 个人主页（8 卡片 + 9 图 + Tab 影评）
+│           ├── Lists.jsx     # 清单管理
+│           └── ListDetail.jsx # 清单详情（表格 + 搜索添加）
+├── 需求分析文档.md            # 需求分析（7 章）
+├── Info.md                   # 项目介绍（PPT 素材）
+└── .gitignore
 ```
 
 ---
@@ -223,16 +234,16 @@ fetchPersonalAnalytics()  // 个人
 
 ## 前端样式系统（App.css）
 
-### CSS 变量（暗色主题）
+### CSS 变量（亮色主题）
 ```css
---bg: #1c1c28;           /* 底色（午夜蓝紫灰） */
---text: #e4e4f0;         /* 主文字（亮白） */
---text-muted: #9090a4;   /* 辅助文字 */
---primary: #4db8c8;      /* 主色（青） */
+--bg: #ffffff;           /* 底色（纯白） */
+--text: #1a1a1a;         /* 主文字（近黑） */
+--text-muted: #6b6b7b;   /* 辅助文字（灰） */
+--primary: #2d9ba8;      /* 主色（青） */
 --danger: #e87850;       /* 危险色（橙） */
 --star: #f5a623;         /* 评分星（金） */
---card-bg: rgba(255,255,255,0.015);
---input-bg: rgba(255,255,255,0.025);
+--card-bg: #f8f8fa;
+--input-bg: #f5f5f7;
 --radius: 12px;
 ```
 
@@ -264,22 +275,29 @@ cd server && node scraper.js    # 首次约 30 分钟爬 ~3000 部
 
 ## 改动历史
 
-### 2026-05-31（最新）
-1. **暗色主题**：底色 `#1c1c28`，Inter 字体，文字 `#e4e4f0`/`#9090a4`，毛玻璃导航，卡片 hover 辉光
+### 2026-06-01（最新）
+1. **代码去重**：提取 Chart.jsx / StarRating.jsx 共享组件，消除 Analytics+Profile 和 List+Search+MovieDetail 的重复代码
+2. **analytics.js 重构**：提取 7 个共享查询函数（`getRatingDistribution` 等），独立端点与聚合端点全部复用，代码量 -40%
+3. **loadMore 并发锁**：加 `loading` 守卫防止快速点击重复加载
+4. **PUT 输入校验**：rating(1-10) / year(1888-2100) / type 校验，防止脏数据写入
+5. **数据库索引**：新增 8 个索引（type/watched/douban_rating/rating/year/created_at/list_items 双列），高频查询走索引
+6. **亮色主题**：全面切换为白底黑字（`--bg: #ffffff`），Chart 组件移除暗色注入
+7. **Info.md**：项目介绍文档（技术栈/问题与解决/功能/上线评估），供 PPT 制作
+8. **需求分析文档.md**：7 章需求分析（背景/可行性/需求/设计/模块/风险/迭代）
+
+### 2026-05-31
+1. **暗色主题**：底色 `#1c1c28`，Inter 字体，毛玻璃导航，卡片 hover 辉光
 2. **ECharts 暗色适配**：Chart 组件自动注入暗色默认值
-3. **自定义清单**：8 个 API，清单管理页 + 详情页（表格+搜索添加），双向进度同步
+3. **自定义清单**：8 个 API，清单管理页 + 详情页，双向进度同步
 4. **统一状态**：进度下拉（想看/在看/已看），`watched` 自动推导
 5. **Profile 卡片**：8 张全部可点击，筛选参数完善
-6. **图片代理**：`/api/proxy-image` 绕过豆瓣防盗链，Poster 组件自动 fallback
+6. **图片代理**：`/api/proxy-image` 绕过豆瓣防盗链
 7. **筛选增强**：年份精确匹配 + 分类 LIKE 模糊（12 种）+ 评分双体系排序
-8. **代码清理**：移除无用的类型下拉、死代码 `toggleWatched`、重复 `buildParams` 逻辑
-9. **简介爬虫**：Puppeteer + Cookie 方案，已成功爬取 681/2243 部简介。IP 被豆瓣暂时封禁，暂停中。下次续爬：Edge 登录 → F12 导出 Cookie → 保存到 `server/douban-cookies.json` → `node scrape-summaries.js`
-
-### 2026-05-31（早期）
-1. 数据库迁移：`watched` + `watch_progress` 字段
-2. 用户操作 API + 个人分析 API
-3. 多值字段拆分（category/director/tags）
-4. 性能优化：分页、懒加载、乐观更新
+8. **代码清理**：移除死代码、重复逻辑
+9. **简介爬虫**：Puppeteer + Cookie，已爬 2240/2243 部（99.9%）。续爬需手动导出 Cookie
+10. **数据库迁移**：`watched` + `watch_progress` 字段
+11. **多值字段拆分**：category/director/tags 独立聚合统计
+12. **性能优化**：分页、懒加载、乐观更新
 
 ## 注意事项
 
